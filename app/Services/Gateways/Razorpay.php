@@ -1,0 +1,91 @@
+<?php
+
+namespace App\Services\Gateways;
+
+use Razorpay\Api\Api;
+
+class Razorpay
+{
+    public $company;
+
+    /**
+     * Razorpay Construct
+     */
+    function __construct($company, $saas = null)
+    {
+        $this->company = $company;
+        $this->saas = $saas;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function gateway()
+    {
+        // If saas subscription payment
+        if ($this->saas) {
+            return new Api(get_system_setting('razorpay_id'), get_system_setting('razorpay_secret_key'));
+        }
+
+        // or customer's own payment
+        return new Api($this->company->getSetting('razorpay_id'), $this->company->getSetting('razorpay_secret_key'));
+    }
+
+    /**
+     * @param array $parameters
+     * @return mixed
+     */
+    public function create(array $parameters)
+    {
+        $gateway = $this->gateway();
+        return $gateway->order->create($parameters);
+    }
+
+    /**
+     * @param array $parameters
+     */
+    public function checkSignature(array $parameters)
+    {
+        try {
+            $gateway = $this->gateway();
+            $attributes  = [
+                'razorpay_signature' => $parameters['razorpay_signature'],
+                'razorpay_payment_id' => $parameters['razorpay_payment_id'],
+                'razorpay_order_id' => $parameters['razorpay_order_id']
+            ];
+            $gateway->utility->verifyPaymentSignature($attributes);
+
+            // Signature is correct
+            return true;
+        }
+        catch(\Exception $e) {
+            // If Signature is not correct its give a excetption so we use try catch
+            return false;
+        }
+    }
+
+    /**
+     * @param $amount
+     */
+    public function getServiceFee($amount)
+    {
+        $percent = 0;
+        $percent_fee = (float) number_format(get_system_setting('razorpay_percent_fee'), 2, '.', '');
+        if ($percent_fee > 0) {
+            $percent = ($amount * $percent_fee) / 100;
+        }
+        $online_payment_fixed_fee = (float) number_format(get_system_setting('razorpay_fixed_fee'), 2, '.', '') ?? 0;
+        return $percent + ($online_payment_fixed_fee * 100);
+    }
+
+    /**
+     * @param $invoice
+     */
+    public function getReturnUrl($invoice)
+    {
+        return route('customer_portal.invoices.razorpay.callback', [
+            'customer' => $invoice->customer->uid ,
+            'invoice' => $invoice->uid
+        ]);
+    }
+}

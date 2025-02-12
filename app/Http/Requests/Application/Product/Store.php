@@ -1,0 +1,89 @@
+<?php
+
+namespace App\Http\Requests\Application\Product;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class Store extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     *
+     * @return bool
+     */
+    public function authorize()
+    {
+        return true;
+    }
+   
+
+public function rules()
+{
+     return [
+            // الحقول الأساسية للمنتج
+            'name' => 'required|string|max:190',
+            'unit_id' => 'required|integer|exists:product_units,id',
+            'price' => 'required|numeric',
+            'description' => 'nullable|string|max:500',
+            'currency_id' => 'nullable|integer|exists:currencies,id',
+            'cover' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'images' => 'nullable|array',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'quantity_alarm' => 'nullable|numeric',
+            'opening_stock' => 'nullable|numeric',
+            'category_id' => 'nullable|integer|exists:product_categories,id',
+            'brand_id' => 'nullable|integer|exists:product_brands,id',
+            'warehouse_id' => 'nullable|integer|exists:warehouses,id',
+            'code' => 'nullable|string|max:127',
+            'barcode' => 'nullable|string|max:127',
+            'hide' => 'nullable|boolean',
+            'variation_group_id' => 'nullable|integer|exists:variation_groups,id',
+            'colors' => 'nullable|array',
+            'colors.*' => 'nullable|string|max:190',
+
+            // الحقول المخصصة
+            'custom_fields' => 'nullable|array',
+            'custom_fields.*' => 'nullable|string|max:190',
+
+            // الحقول المتعلقة بالضرائب
+            'taxes' => 'nullable|array',
+            'taxes.*' => 'nullable|integer|exists:taxes,id',
+
+            // الحقول المتعلقة بالتغييرات (Variations)
+            'price' => 'required|array',
+            'price.*' => 'nullable|numeric',
+
+            // 'variation_id' => 'nullable|array',
+            // 'variation_id.*' => 'nullable|integer',
+
+            'quantity' => 'nullable|array',
+            'quantity.*' => 'nullable|numeric',
+
+            'sku' => 'nullable|array',
+            'sku.*' => 'nullable|string|max:127',
+
+            'vat' => 'nullable|array',
+            'vat.*' => 'nullable|numeric',
+
+            // الحقول الإضافية للتغييرات
+            'discount' => 'nullable|array',
+            'discount.*' => 'nullable|numeric',
+
+            'image' => 'nullable|array',
+            'image.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+
+                
+            'variation_id' => 'nullable|array',
+            'variation_id.*' => 'nullable|array',
+            'variation_id.*.*' => [
+            'nullable',
+            'integer',
+            Rule::exists('variations', 'id')->where(function ($query) use ($currentCompany) {
+                $query->where('company_id', $currentCompany->id);
+            }),
+        ],
+        ];
+}
+
+
+}

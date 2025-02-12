@@ -1,0 +1,113 @@
+<?php
+
+namespace App\Services\Gateways;
+
+use Omnipay\Omnipay;
+
+class PaypalExpress
+{
+    public $company;
+
+    /**
+     * PaypalExpress Construct
+     */
+    function __construct($company, $saas = false)
+    {
+        $this->saas = $saas;
+        $this->company = $company;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function gateway()
+    {
+        $gateway = Omnipay::create('PayPal_Express');
+
+        // If saas
+        if ($this->saas) {
+            $gateway->setUsername(get_system_setting('paypal_username'));
+            $gateway->setPassword(get_system_setting('paypal_password'));
+            $gateway->setSignature(get_system_setting('paypal_signature'));
+            $gateway->setTestMode(get_system_setting('paypal_test_mode'));
+
+            return $gateway;
+        }
+
+        $gateway->setUsername($this->company->getSetting('paypal_username'));
+        $gateway->setPassword($this->company->getSetting('paypal_password'));
+        $gateway->setSignature($this->company->getSetting('paypal_signature'));
+        $gateway->setTestMode($this->company->getSetting('paypal_test_mode'));
+ 
+        return $gateway;
+    }
+
+    /**
+     * @param array $parameters
+     * @return mixed
+     */
+    public function purchase(array $parameters)
+    {
+        $response = $this->gateway()
+            ->purchase($parameters)
+            ->send();
+
+        return $response;
+    }
+
+    /**
+     * @param array $parameters
+     */
+    public function complete(array $parameters)
+    {
+        $response = $this->gateway()
+            ->completePurchase($parameters)
+            ->send();
+
+        return $response;
+    }
+
+    /**
+     * @param $amount
+     */
+    public function getServiceFee($amount)
+    {
+        $percent = 0;
+        $percent_fee = (float) number_format(get_system_setting('paypal_percent_fee'), 2, '.', '');
+        if ($percent_fee > 0) {
+            $percent = ($amount * $percent_fee) / 100;
+        }
+        $online_payment_fixed_fee = (float) number_format(get_system_setting('paypal_fixed_fee'), 2, '.', '') ?? 0;
+        return $percent + ($online_payment_fixed_fee * 100);
+    }
+
+    /**
+     * @param $amount
+     */
+    public function formatAmount($amount)
+    {
+        return number_format($amount/100, 2, '.', '');
+    }
+
+    /**
+     * @param $invoice
+     */
+    public function getCancelUrl($invoice)
+    {
+        return route('customer_portal.invoices.paypal.cancelled', [
+            'customer' => $invoice->customer->uid ,
+            'invoice' => $invoice->uid
+        ]);
+    }
+
+    /**
+     * @param $invoice
+     */
+    public function getReturnUrl($invoice)
+    {
+        return route('customer_portal.invoices.paypal.completed', [
+            'customer' => $invoice->customer->uid ,
+            'invoice' => $invoice->uid
+        ]);
+    }
+}
