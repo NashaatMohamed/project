@@ -181,10 +181,7 @@
         </div>
     </div>
 
-
-
-
-    @if($product->getCustomFields()->count() > 0)
+@if($product->getCustomFields()->count() > 0)
         <div class="row">
             @foreach ($product->getCustomFields() as $custom_field)
                 <div class="col">

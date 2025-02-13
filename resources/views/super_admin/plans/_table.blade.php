@@ -30,7 +30,7 @@
                         <td>
                             <p class="mb-0">{{ $plan->trial_period }} {{ __('messages.days') }}</p>
                         </td>
-                        <td class="text-center"><i class="material-icons icon-16pt text-muted-light mr-1">today</i> {{ $plan->created_at->format('Y-m-d') }}</td>
+{{--                        <td class="text-center"><i class="material-icons icon-16pt text-muted-light mr-1">today</i> {{ $plan->created_at->format('Y-m-d') }}</td>--}}
                         <td><a href="{{ route('super_admin.plans.edit', $plan->id) }}" class="btn btn-sm btn-link"><i class="material-icons icon-16pt">arrow_forward</i></a></td>
                     </tr>
                 @endforeach

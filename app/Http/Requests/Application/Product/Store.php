@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Application\Product;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class Store extends FormRequest
 {
@@ -15,15 +16,15 @@ class Store extends FormRequest
     {
         return true;
     }
-   
 
-public function rules()
-{
-     return [
+
+    public function rules()
+    {
+        return [
             // الحقول الأساسية للمنتج
             'name' => 'required|string|max:190',
             'unit_id' => 'required|integer|exists:product_units,id',
-            'price' => 'required|numeric',
+            'price' => 'required',
             'description' => 'nullable|string|max:500',
             'currency_id' => 'nullable|integer|exists:currencies,id',
             'cover' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -36,54 +37,61 @@ public function rules()
             'warehouse_id' => 'nullable|integer|exists:warehouses,id',
             'code' => 'nullable|string|max:127',
             'barcode' => 'nullable|string|max:127',
-            'hide' => 'nullable|boolean',
-            'variation_group_id' => 'nullable|integer|exists:variation_groups,id',
-            'colors' => 'nullable|array',
-            'colors.*' => 'nullable|string|max:190',
-
-            // الحقول المخصصة
-            'custom_fields' => 'nullable|array',
-            'custom_fields.*' => 'nullable|string|max:190',
-
-            // الحقول المتعلقة بالضرائب
-            'taxes' => 'nullable|array',
-            'taxes.*' => 'nullable|integer|exists:taxes,id',
-
-            // الحقول المتعلقة بالتغييرات (Variations)
-            'price' => 'required|array',
-            'price.*' => 'nullable|numeric',
-
-            // 'variation_id' => 'nullable|array',
-            // 'variation_id.*' => 'nullable|integer',
-
-            'quantity' => 'nullable|array',
-            'quantity.*' => 'nullable|numeric',
-
-            'sku' => 'nullable|array',
-            'sku.*' => 'nullable|string|max:127',
-
-            'vat' => 'nullable|array',
-            'vat.*' => 'nullable|numeric',
-
-            // الحقول الإضافية للتغييرات
-            'discount' => 'nullable|array',
-            'discount.*' => 'nullable|numeric',
-
-            'image' => 'nullable|array',
-            'image.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-
-                
-            'variation_id' => 'nullable|array',
-            'variation_id.*' => 'nullable|array',
-            'variation_id.*.*' => [
-            'nullable',
-            'integer',
-            Rule::exists('variations', 'id')->where(function ($query) use ($currentCompany) {
-                $query->where('company_id', $currentCompany->id);
-            }),
-        ],
+//            'hide' => 'nullable|boolean',
+//            'variation_group_id' => 'nullable|integer|exists:variation_groups,id',
+//            'colors' => 'nullable|array',
+//            'colors.*' => 'nullable|string|max:190',
+//
+//            // الحقول المخصصة
+//            'custom_fields' => 'nullable|array',
+//            'custom_fields.*' => 'nullable|string|max:190',
+//
+//            // الحقول المتعلقة بالضرائب
+//            'taxes' => 'nullable|array',
+//            'taxes.*' => 'nullable|integer|exists:taxes,id',
+//
+//            // الحقول المتعلقة بالتغييرات (Variations)
+//            'variation_price' => 'required|array',
+//            'price.*' => 'nullable|numeric',
+//
+//            // 'variation_id' => 'nullable|array',
+//            // 'variation_id.*' => 'nullable|integer',
+//
+//            'quantity' => 'nullable|array',
+//            'quantity.*' => 'nullable|numeric',
+//
+//            'sku' => 'nullable|array',
+//            'sku.*' => 'nullable|string|max:127',
+//
+//            'vat' => 'nullable|array',
+//            'vat.*' => 'nullable|numeric',
+//
+//            // الحقول الإضافية للتغييرات
+//            'discount' => 'nullable|array',
+//            'discount.*' => 'nullable|numeric',
+//
+//            'image' => 'nullable|array',
+//            'image.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+//
+//
+//            'variation_id' => 'nullable|array',
+//            'variation_id.*' => 'nullable|array',
+//            'variation_id.*.*' => [
+//                'nullable',
+//                'integer',
+//                Rule::exists('variations', 'id')->where(function ($query) use ($currentCompany) {
+//                    $query->where('company_id', $currentCompany->id);
+//                }),
+//            ],
         ];
-}
+    }
+
+    public function prepareForValidation()
+    {
+        $this->merge([
+            "price" => ltrim(preg_replace('/[^0-9\.]/', '', $this->price), '.'),
+        ]);
+    }
 
 
 }

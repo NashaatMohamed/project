@@ -44,6 +44,11 @@
 
         <!-- قسم التغييرات والجدول -->
 
+        <div class="form-group d-flex justify-content-end mt-3">
+            <input type="checkbox" id="toggleVariations" class="form-check-input">
+            <label for="toggleVariations" class="ml-2">{{ __('messages.enable_variations') }}</label>
+        </div>
+        <div id="variationsSection" style="display: none;">
         <div class="card card-form">
             <div class="row no-gutters">
 
@@ -195,6 +200,7 @@
             </div>
 
         </div>
+    </div>
 
         <div class="form-group text-center mt-3">
             <button type="submit" class="btn btn-primary">{{ __('messages.save_product') }}</button>
@@ -412,6 +418,19 @@
                 $tr.find("input[name='quantity[]']").val(sum);
             });
 
+        });
+    </script>
+
+{{--    // إظهار أو إخفاء القسم عند تغيير حالة الـ Checkbox--}}
+    <script>
+        $(document).ready(function() {
+            $('#toggleVariations').change(function() {
+                if ($(this).is(':checked')) {
+                    $('#variationsSection').slideDown();
+                } else {
+                    $('#variationsSection').slideUp();
+                }
+            });
         });
     </script>
 
