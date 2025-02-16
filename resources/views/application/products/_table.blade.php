@@ -16,13 +16,13 @@
                     <tr>
                         <td>
                             <div class="badge badge-light">
-                                <a class="mb-0" href="{{ route('products.edit', ['product' => $product->id, 'company_uid' => $currentCompany->uid]) }}">
+                                <a class="mb-0" href="{{ route('products.show', ['product' => $product->id, 'company_uid' => $currentCompany->uid]) }}">
                                     #{{ $product->id }}
                                 </a>
                             </div>
                         </td>
                         <td>
-                            <a  class="h6 mb-0" href="{{ route('products.edit', ['product' => $product->id, 'company_uid' => $currentCompany->uid]) }}">
+                            <a  class="h6 mb-0" href="{{ route('products.show', ['product' => $product->id, 'company_uid' => $currentCompany->uid]) }}">
                                 <strong>{{ $product->name }}</strong>
                             </a>
                         </td>

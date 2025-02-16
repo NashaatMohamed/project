@@ -39,8 +39,12 @@ class Store extends FormRequest
             'barcode' => 'nullable|string|max:127',
 //            'hide' => 'nullable|boolean',
 //            'variation_group_id' => 'nullable|integer|exists:variation_groups,id',
-//            'colors' => 'nullable|array',
-//            'colors.*' => 'nullable|string|max:190',
+            'colors' => 'nullable|array',
+            'colors.*' => 'nullable|string|max:190',
+
+            "colors_quantity" => 'nullable|array',
+            "colors_quantity.*" => 'nullable|array',
+            "colors_quantity.*.*" => 'nullable|numeric',
 //
 //            // الحقول المخصصة
 //            'custom_fields' => 'nullable|array',
@@ -51,17 +55,17 @@ class Store extends FormRequest
 //            'taxes.*' => 'nullable|integer|exists:taxes,id',
 //
 //            // الحقول المتعلقة بالتغييرات (Variations)
-//            'variation_price' => 'required|array',
-//            'price.*' => 'nullable|numeric',
+            'variation_price' => 'required|array',
+            'variation_price.*' => 'nullable|numeric',
+
+             'variation_id' => 'nullable|array',
+             'variation_id.*' => 'nullable',
 //
-//            // 'variation_id' => 'nullable|array',
-//            // 'variation_id.*' => 'nullable|integer',
+            'quantity' => 'nullable|array',
+            'quantity.*' => 'nullable',
 //
-//            'quantity' => 'nullable|array',
-//            'quantity.*' => 'nullable|numeric',
-//
-//            'sku' => 'nullable|array',
-//            'sku.*' => 'nullable|string|max:127',
+            'sku' => 'nullable|array',
+            'sku.*' => 'nullable|string|max:127',
 //
 //            'vat' => 'nullable|array',
 //            'vat.*' => 'nullable|numeric',

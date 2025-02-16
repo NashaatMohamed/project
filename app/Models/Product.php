@@ -8,6 +8,7 @@ use App\Traits\HasTax;
 use App\Traits\UUIDTrait;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
@@ -148,7 +149,12 @@ class Product extends Model
      */
     public function ProductVariations()
     {
-        return $this->hasMany(ProductVariations::class,'product_id');
+        return $this->hasMany(ProductVariation::class,'product_id');
+    }
+
+    public function latestProductVariations() : HasMany
+    {
+        return $this->hasMany(ProductVariation::class,'product_id')->latest()->whereNotNull("parent_id");
     }
 
     /**

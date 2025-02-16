@@ -5,6 +5,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Variations extends Model
 {
@@ -37,12 +39,17 @@ class Variations extends Model
     /**
      * علاقة متعدد إلى متعدد مع نموذج Variations عبر جدول group_variations
      */
-    public function groupVariations()
+    public function variationGroup() : BelongsToMany
     {
         return $this->belongsToMany(Variations::class, 'group_variations')
                     ->withTimestamps();
     }
 
+
+    public function groupVariations()  :HasMany
+    {
+        return $this->hasMany(GroupVariation::class, 'variation_group_id');
+    }
     /**
      * وصول accessor لـ "children"
      */

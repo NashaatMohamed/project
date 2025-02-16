@@ -3,7 +3,11 @@
 namespace App\Http\Controllers\Application;
 
 use App\Http\Controllers\Controller;
+use App\Models\Company;
 use App\Models\Product;
+use App\Models\ProductVariation;
+use App\Models\VariationAttributes;
+use App\ProductVariationColor;
 use Illuminate\Http\Request;
 use App\Http\Requests\Application\Product\Store;
 use App\Http\Requests\Application\Product\Update;
@@ -63,9 +67,95 @@ class ProductController extends Controller
         $user = $request->user();
         $currentCompany = $user->currentCompany();
         $data = $request->validated() + ['company_id' => $currentCompany->id];
-        $product = Product::query()->create($data);
-        return $product;
-        return redirect()->route('products.index')->with('success', __('global.record_added'));
+
+        // إنشاء المنتج الرئيسي
+        $product = $this->storeProducts($data);
+
+        foreach ($data['variation_id'] as $index => $variationGroup) {
+            $productVariation = null;
+
+            // إنشاء ProductVariation لكل VariationAttribute
+            foreach ($variationGroup as $variationAttributeId) {
+                $productVariation = $this->createProductVariation($product->id, $variationAttributeId, $data, $index, $currentCompany->id);
+                $data['parent_id'] = $productVariation->id;
+            }
+
+            // تخزين الألوان إذا كان هناك ProductVariation صالح
+            if ($productVariation) {
+                $this->storeColors($productVariation->id, $data, $index);
+            }
+
+            $data['parent_id'] = null;
+        }
+
+        return redirect()->route('products', ['company_uid' => $currentCompany->uid])->with('success', __('global.record_added'));
+    }
+
+    /**
+     * إنشاء ProductVariation
+     */
+    private function createProductVariation($productId, $variationAttributeId, $data, $index, $companyId)
+    {
+        $variation = VariationAttributes::query()->where("id", $variationAttributeId)->first();
+
+        return ProductVariation::query()->create([
+            "product_id" => $productId,
+            "variation_attribute_id" => $variationAttributeId,
+            "variation_id" => $variation->variation_id ?? null,
+            "price" => $data['variation_price'][$index] ?? 0,
+            "quantity" => $data['quantity'][$index] ?? 0,
+            "sku" => $data['sku'][$index] ?? null,
+            "company_id" => $companyId,
+            "parent_id" => $data['parent_id'] ?? null
+        ]);
+    }
+
+    /**
+     * تخزين الألوان المرتبطة بـ ProductVariation
+     */
+    private function storeColors($productVariationId, $data, $index)
+    {
+        foreach ($data['colors'] as $colorName) {
+            if (!empty($data['colors_quantity'][$colorName][$index])) {
+                ProductVariationColor::query()->create([
+                    "product_variation_id" => $productVariationId,
+                    "color" => $colorName,
+                    "quantity" => $data['colors_quantity'][$colorName][$index]
+                ]);
+            }
+        }
+    }
+
+    private function storeProducts($data)
+    {
+        return Product::query()->create([
+            "name" => $data["name"] ?? null,
+            "price" => $data['price'] ?? null,
+            "unit_id" => $data["unit_id"] ?? null,
+            "warehouse_id" => $data["warehouse_id"] ?? null,
+            "opening_stock" => $data["opening_stock"] ?? null,
+            "quantity_alarm" => $data["quantity_alarm"] ?? null,
+            "brand_id" => $data["brand_id"] ?? null,
+            "description" => $data["description"] ?? null,
+            "code" => $data['code'] ?? null,
+            "barcode" => $data['barcode'] ?? null,
+            "company_id" => $data['company_id'] ?? null
+        ]);
+    }
+
+
+    public function show($company_uid, $id)
+    {
+        $currentCompany = Company::where('uid', $company_uid)->firstOrFail();
+        $product = Product::with(['latestProductVariations', 'unit'])
+            ->where('id', $id)
+            ->where('company_id', $currentCompany->id)
+            ->firstOrFail();
+
+        return view('application.products.details', [
+            'product' => $product,
+            'currentCompany' => $currentCompany, // Assuming $currentCompany is available
+        ]);
     }
 
 

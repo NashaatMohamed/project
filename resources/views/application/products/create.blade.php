@@ -68,8 +68,7 @@
                                     <select id="variation_group_id" name="variation_group_id" class="form-control select2">
                                         <option disabled selected>{{ __('messages.select_variation_group') }}</option>
                                         @foreach (get_variation_groups_select2_array($currentCompany->id) as $key => $val)
-                                            <option value="{{ $key }}"
-                                                {{ old('variation_group_id') == $key ? 'selected' : '' }}>
+                                            <option value="{{ $key }}" {{ old('variation_group_id') == $key ? 'selected' : '' }}>
                                                 {{ $val }}
                                             </option>
                                         @endforeach
@@ -142,6 +141,7 @@
                                                 class="variation_select form-control select2 select-with-footer"
                                                 multiple data-select2-id="variation_select">
                                             </select>
+
                                             <div class="d-none select-footer">
                                                 <a href="{{ route('settings.variation.create', ['company_uid' => $currentCompany->uid]) }}"
                                                     target="_blank" class="font-weight-300">+
@@ -152,7 +152,7 @@
                                     </td>
                                     <td class="body_rows_td">
 
-                                        <input type="text" name="price[]" id="price" value=""
+                                        <input type="text" name="variation_price[]" id="variation_price" value=""
                                             class="form-control" placeholder="{{ __('messages.price') }}">
 
                                     </td>
@@ -229,24 +229,33 @@
     <!-- عند تغيير مجموعة التغييرات -->
     <script>
         $(document).ready(function() {
-
             $("#variation_group_id").change(function() {
-
-                var variation_group_id = $("#variation_group_id").val();
+                var variation_group_id = $("#variation_group_id").val() || 0; // Default to 0 if not selected
                 $("#variation_group_id_hidden").val(variation_group_id);
 
                 $.get("{{ route('ajax.get_variations_tree', ['company_uid' => $currentCompany->uid]) }}", {
                     variation_group_id: variation_group_id
                 }, function(response) {
 
-                    attributesTree = response;
+                    // Update variation groups dropdown (always available)
+                    $("#variation_group_id").empty().append('<option selected value="0">{{ __("messages.all_variation_group") }}</option>');
+                    $.each(response.variation_groups, function(index, group) {
+                        $("#variation_group_id").append('<option value="' + group.id + '">' + group.name + '</option>');
+                    });
 
+                    // Set the selected value again
+                    $("#variation_group_id").val(variation_group_id);
+
+                    attributesTree = response.variations_tree; // Store filtered/unfiltered variations
+
+                    // Destroy existing Select2 instances before re-initializing
                     $('.variation_select:not(:first), .vat:not(:first)').each(function() {
                         if ($(this).data('select2')) {
                             $(this).select2('destroy');
                         }
                     });
 
+                    // Populate with variations (all or filtered based on selection)
                     $('.variation_select:not(:first)').empty().select2({
                         placeholder: '{{ __('messages.select_variation') }}',
                         multiple: true,
@@ -262,7 +271,11 @@
                     });
                 });
             });
+
+            // Trigger change on page load to ensure variations and groups are loaded
+            $("#variation_group_id").trigger('change');
         });
+
     </script>
 
     <!-- التعامل مع الألوان -->
@@ -433,5 +446,6 @@
             });
         });
     </script>
+
 
 @endsection

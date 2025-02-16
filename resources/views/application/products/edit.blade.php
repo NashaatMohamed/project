@@ -245,8 +245,8 @@
                                                 class="form-control select2-hidden-accessible select-with-footer"
                                                 data-select2-id="variation_group_id"
                                                 data-minimum-results-for-search="-1">
-                                            <option disabled
-                                                    selected>{{ __('messages.select_variation_group') }}</option>
+{{--                                            <option disabled--}}
+{{--                                                    selected>{{ __('messages.select_variation_group') }}</option>--}}
                                             @foreach($x=get_variation_groups_select2_array($currentCompany->id) as $key=>$val)
                                                 <option value="{{$key }}" {{$key==$product->variation_group_id?"selected":""}}>{{ $val }}</option>
                                             @endforeach

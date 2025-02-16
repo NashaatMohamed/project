@@ -1,9 +1,12 @@
 <?php
 
+use App\Http\Controllers\Application\ProductController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Spatie\Honeypot\ProtectAgainstSpam;
 use App\Http\Controllers\Application\Settings\VariationController;
+
+
 
 //-----------------------------------------//
 //             INSTALLER ROUTES            //
@@ -199,6 +202,7 @@ Route::group(['namespace' => 'Application', 'prefix' => '/{company_uid}', 'middl
     Route::get('/products/{product}/edit', 'ProductController@edit')->name('products.edit');
     Route::post('/products/{product}/edit', 'ProductController@update')->name('products.update');
     Route::get('/products/{product}/delete', 'ProductController@delete')->name('products.delete');
+    Route::get('/products/{product}/show', [ProductController::class, 'show'])->name('products.show');
     Route::post('/products/{product}/update_variation', 'ProductController@updateVariation')->name('products.update_variation');
     
 
@@ -426,9 +430,7 @@ Route::group(['namespace' => 'Application', 'prefix' => '/{company_uid}', 'middl
 
         // تحديث خصائص التغيير
         Route::post('/variation/update-attributes/{variation}', [VariationController::class, 'updateAttributes'])->name('settings.variation.updateAttributes');
-    
 
-        
 
         // Settings>Team
         Route::get('/team', 'TeamController@index')->name('settings.team');
