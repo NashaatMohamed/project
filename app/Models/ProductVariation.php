@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\ProductVariationColor;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -44,13 +45,13 @@ class ProductVariation extends Model
     /**
      * Get the full name of the product variation.
      */
+
     public function getFullProductName(): string
     {
-        if (!$this->parent_id) {
-            return $this->product->name . ' ' . ($this->variationAttribute->name ?? '');
-        }
-
-        return $this->product->name . ' ' . $this->getAllAncestorsName()->implode(' ') . ' ' . ($this->variationAttribute->name ?? '');
+        $variation_attributes_names = $this->getVariationAttributes()->map(function ($value) {
+            return $value->name;
+        });
+        return $this->product->name . ' ' . $variation_attributes_names->implode(' ');
     }
 
     /**
@@ -61,6 +62,11 @@ class ProductVariation extends Model
         return $this->belongsTo(Product::class);
     }
 
+    public function productVariationColors() : HasMany
+    {
+        return $this->hasMany(ProductVariationColor::class, 'product_variation_id');
+    }
+
     /**
      * Get the variation attribute.
      */
@@ -69,80 +75,10 @@ class ProductVariation extends Model
         return $this->belongsTo(VariationAttributes::class, 'variation_attribute_id');
     }
 
-    /**
-     * Get child variations.
-     */
-    public function childVariation(): HasMany
+    public function getVariationAttributes(): \Illuminate\Support\Collection
     {
-        return $this->hasMany(ProductVariation::class, 'parent_id', 'id');
-    }
-
-    /**
-     * Get parent variation.
-     */
-    public function parentVariation(): BelongsTo
-    {
-        return $this->belongsTo(ProductVariation::class, 'parent_id', 'id');
-    }
-
-    /**
-     * Recursively get all descendants.
-     */
-    private function traverseDescendants()
-    {
-        $descendants = collect();
-        $stack = [$this];
-
-        while ($stack) {
-            $current = array_pop($stack);
-            foreach ($current->childVariation as $child) {
-                $descendants->push($child);
-                $stack[] = $child;
-            }
-        }
-
-        return $descendants;
-    }
-
-    /**
-     * Recursively get all ancestors.
-     */
-
-    private  function traverseAncestors($ancestors = null)
-    {
-        $ancestors = $ancestors ?? collect();
-
-        if ($this->parentVariation) {
-            $ancestors->push($this->parentVariation);
-            return $this->parentVariation->traverseAncestors($ancestors);
-        }
-
-        return $ancestors;
-    }
-
-    /**
-     * Get all ancestors.
-     */
-    public function getAllAncestors()
-    {
-        return $this->traverseAncestors()->reverse();
-    }
-
-    /**
-     * Get all descendants.
-     */
-    public function getAllDescendants()
-    {
-        return $this->traverseDescendants();
-    }
-
-    /**
-     * Get all ancestors' names.
-     */
-    public function getAllAncestorsName()
-    {
-        return $this->getAllAncestors()->map(function ($ancestor) {
-            return $ancestor->variationAttribute->name ?? '';
+        return collect(json_decode($this->variations_json, true))->map(function ($value) {
+            return VariationAttributes::where('id', $value)->first();
         });
     }
 }

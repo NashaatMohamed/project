@@ -38,7 +38,7 @@ class Store extends FormRequest
             'code' => 'nullable|string|max:127',
             'barcode' => 'nullable|string|max:127',
 //            'hide' => 'nullable|boolean',
-//            'variation_group_id' => 'nullable|integer|exists:variation_groups,id',
+            'variation_group_id' => 'nullable',
             'colors' => 'nullable|array',
             'colors.*' => 'nullable|string|max:190',
 

@@ -147,7 +147,7 @@ class Product extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function ProductVariations()
+    public function ProductVariations() : HasMany
     {
         return $this->hasMany(ProductVariation::class,'product_id');
     }
@@ -201,6 +201,17 @@ class Product extends Model
     {
         return !empty($this->attributes["cover"]) ? env("APP_URL").'/uploads/product/' .$this->attributes["cover"]   : "https://daleel-madani.org/sites/default/files/default_images/daleel-madani-default-cover-image.png";
     }
+
+//    public function getCustomers()
+//    {
+//        $customers = $this->Invoices->map(function ($invoice) {
+//            $customer = $invoice->customer;
+//            $customer['quantity'] = $invoice->items->sum('quantity');
+//            $customer['total'] = $invoice->total;
+//        });
+//
+//        return $customers->unique();
+//    }
 
 
 

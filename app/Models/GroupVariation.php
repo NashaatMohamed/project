@@ -10,7 +10,7 @@ class GroupVariation extends Model
     protected $table = 'group_variations';
 
     protected $fillable = [
-        'variation_id',
+        'variations_id',
         'variation_group_id',
         'sort',
     ];

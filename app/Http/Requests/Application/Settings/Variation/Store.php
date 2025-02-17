@@ -29,6 +29,7 @@ class Store extends FormRequest
             'main_name' => 'required|string|max:190',
             'name' => 'required|array|min:1',
             'name.*' => 'required|string|max:190',
+            "variation_group_id" => "required|integer|exists:variation_groups,id",
         ];
     }
 }

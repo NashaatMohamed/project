@@ -5,6 +5,8 @@
 namespace App\Http\Controllers\Application\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Models\GroupVariation;
+use App\Models\VariationGroup;
 use App\Models\Variations;
 use Illuminate\Http\Request;
 use App\Http\Requests\Application\Settings\Variation\Store;
@@ -41,6 +43,10 @@ class VariationController extends Controller
     {
         $variation = new Variations();
 
+        $user = $request->user();
+        $currentCompany = $user->currentCompany();
+
+        $variationGroups = VariationGroup::query()->where("company_id", $currentCompany->id)->get();
         // تعبئة النموذج بالبيانات السابقة في حالة وجودها
         if (!empty($request->old())) {
             $variation->fill($request->old());
@@ -51,6 +57,7 @@ class VariationController extends Controller
 
         return view('application.settings.variation.create', [
             'variation' => $variation,
+            'variationGroups' => $variationGroups
         ]);
     }
 
@@ -71,11 +78,15 @@ class VariationController extends Controller
             'company_id' => $currentCompany->id,
         ]);
 
+        GroupVariation::query()->create([
+            "variations_id" => $variation->id,
+            "variation_group_id" => $request->variation_group_id
+        ]);
+
         session()->flash('alert-success', __('messages.variation_added'));
 
         // إضافة الخصائص للتغيير
         $this->addAttributes($request, $variation);
-
 
 
         // إعادة التوجيه إلى صفحة تحرير التغيير
@@ -121,7 +132,7 @@ class VariationController extends Controller
 
         session()->flash('alert-success', __('messages.variation_updated'));
 
-         // إضافة الخصائص للتغيير
+        // إضافة الخصائص للتغيير
         $this->addAttributes($request, $variation);
 
         return redirect()->route('settings.variation', [

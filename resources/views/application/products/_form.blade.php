@@ -56,7 +56,7 @@
         <div class="col">
             <div class="form-group required">
                 <label for="price">{{ __('messages.price') }}</label>
-                <input name="main_price" type="text" class="form-control price_input"
+                <input name="price" type="text" class="form-control price_input"
                        placeholder="{{ __('messages.price') }}" autocomplete="off"
                        value="{{ $product->price ?? 0 }}" required>
             </div>

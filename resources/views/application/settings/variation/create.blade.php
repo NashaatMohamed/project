@@ -123,4 +123,14 @@
             });
         });
     </script>
+
+
+   <script>
+       $(document).ready(function() {
+           $('.select2').select2({
+               placeholder: "{{ __('messages.select_variation_group') }}",
+               allowClear: true
+           });
+       });
+   </script>
 @endsection
