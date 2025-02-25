@@ -24,6 +24,7 @@ class InvoiceItem extends Model
         'discount_type',
         'discount_val',
         'total',
+        "product_variation_id"
     ];
 
     /**

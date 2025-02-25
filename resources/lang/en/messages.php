@@ -890,6 +890,9 @@ return array (
   'credit_note_pdf_view_link' => 'Credit Note PDF View & Download Link',
   'reference_no' => 'Reference No',
   'tracking_code' => 'Tracking Codes',
+  'variation_stock_exceeds_main_stock' => 'the variation stock exceeds the main stock quantity',
+  "variation_stock_mismatch" => "the variation stock mismatch the main stock quantity",
+  "color_stock_mismatch" => "the color stock mismatch the Variation quantity",
   'tracking_code_description' => 'Add your tracking codes above </head> tag',
   'recurring_alert' => '<strong>Recurring: </strong> Next invoice are going to issue at :date'
 );

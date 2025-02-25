@@ -3,18 +3,16 @@
 namespace App\Http\Controllers\Application;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Application\Product\Store;
 use App\Models\Company;
 use App\Models\Product;
 use App\Models\ProductBrands;
 use App\Models\ProductUnit;
 use App\Models\ProductVariation;
-use App\Models\VariationAttributes;
+use App\Models\ProductVariationColor;
 use App\Models\Warehouses;
-use App\ProductVariationColor;
+use App\Services\StockMovement\StockMovementService;
 use Illuminate\Http\Request;
-use App\Http\Requests\Application\Product\Store;
-use App\Http\Requests\Application\Product\Update;
-use SebastianBergmann\CodeCoverage\Report\Xml\Unit;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -72,7 +70,7 @@ class ProductController extends Controller
         $currentCompany = $user->currentCompany();
         $data = $request->validated() + ['company_id' => $currentCompany->id];
 
-        $data['colors_quantity'] = array_map(fn($q) => array_values(array_filter($q)), $data['colors_quantity']);
+        $data['colors_quantity'] = array_key_exists("colors_quantity",$data) ? array_map(fn($q) => array_values(array_filter($q)), $data['colors_quantity']) : [];
         // إنشاء المنتج الرئيسي
         $product = $this->storeProducts($data);
 
@@ -136,6 +134,7 @@ class ProductController extends Controller
             "code" => $data['code'] ?? null,
             "barcode" => $data['barcode'] ?? null,
             "company_id" => $data['company_id'] ?? null,
+            "category_id" => $data['category_id'] ?? null,
 //            "variation_group_id" => (int) $data['variation_group_id'] == 0 ? null : (int) $data['variation_group_id'],
         ]);
     }
@@ -203,7 +202,10 @@ class ProductController extends Controller
     {
         $user = $request->user();
         $currentCompany = $user->currentCompany();
-        $data = $request->validated();
+        $data = $request->validated() + ['company_id' => $currentCompany->id];
+
+        $data['colors_quantity'] = array_key_exists("colors_quantity",$data) ? array_map(fn($q) => array_values(array_filter($q)), $data['colors_quantity']) : [];
+
 
         // Fetch the product
         $product = Product::where('id', $id)
@@ -222,7 +224,6 @@ class ProductController extends Controller
             "description" => $data["description"] ?? null,
             "code" => $data['code'] ?? null,
             "barcode" => $data['barcode'] ?? null,
-//            "variation_group_id" => (int) $data['variation_group_id'] == 0 ? null : (int) $data['variation_group_id'],
         ]);
 
         if (empty($data['variation_id'])) {
@@ -231,18 +232,25 @@ class ProductController extends Controller
             foreach ($data['variation_id'] as $index => $variationGroup) {
                 $variationsJson = json_encode($variationGroup);
 
-                $productVariation = ProductVariation::updateOrCreate(
-                    [
+                $productVariation = $product->productVariations()->where('variations_json', $variationsJson)->first();
+
+                if ($productVariation) {
+                    StockMovementService::handleStockMovementForManualEdit($productVariation,$data['quantity'][$index] ?? 0,$user->id,$currentCompany->id);
+                    $productVariation->update([
+                        "price" => $data['variation_price'][$index] ?? 0,
+                        "quantity" => $data['quantity'][$index] ?? 0,
+                        "sku" => $data['sku'][$index] ?? null,
+                    ]);
+                }else{
+                    $productVariation = ProductVariation::create([
                         "product_id" => $product->id,
-                        "variations_json" => $variationsJson,
-                    ],
-                    [
                         "price" => $data['variation_price'][$index] ?? 0,
                         "quantity" => $data['quantity'][$index] ?? 0,
                         "sku" => $data['sku'][$index] ?? null,
                         "company_id" => $currentCompany->id,
-                    ]
-                );
+                        "variations_json" => $variationsJson
+                    ]);
+                }
 
                 // Update or create colors for the ProductVariation
                 if ($productVariation && !empty($data['colors'])) {
@@ -264,18 +272,19 @@ class ProductController extends Controller
             return;
         }
 
+        // حذف جميع الألوان القديمة المرتبطة بـ ProductVariation
+        ProductVariationColor::where('product_variation_id', $productVariationId)->delete();
+
+        // إنشاء الألوان الجديدة
         foreach ($data['colors'] as $colorName) {
-            ProductVariationColor::updateOrCreate(
-                [
-                    "product_variation_id" => $productVariationId,
-                    "color" => $colorName,
-                ],
-                [
-                    "quantity" => $data['colors_quantity'][$colorName][$index] ?? 0,
-                ]
-            );
+            ProductVariationColor::create([
+                "product_variation_id" => $productVariationId,
+                "color" => $colorName,
+                "quantity" => $data['colors_quantity'][$colorName][$index] ?? 0,
+            ]);
         }
     }
+
 
     public function delete(Request $request)
     {

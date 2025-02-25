@@ -2,11 +2,9 @@
 
 namespace App\Models;
 
-use App\ProductVariationColor;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Collection;
 
 class ProductVariation extends Model
 {
@@ -81,4 +79,10 @@ class ProductVariation extends Model
             return VariationAttributes::where('id', $value)->first();
         });
     }
+
+    public function stockMovements() : HasMany
+    {
+        return $this->hasMany(StockMovement::class, 'product_variation_id');
+    }
+
 }

@@ -10,13 +10,7 @@ use App\Http\Requests\Application\Settings\ProductCategory\Update;
 
 class ProductCategoryController extends Controller
 { 
-    /**
-     * Display the Form for Creating New   ProductCategories
-     *
-     * @param  \Illuminate\Http\Request $request
-     * 
-     * @return \Illuminate\Http\Response
-     */
+
     public function create(Request $request)
     {
         $product_category = new ProductCategories();
@@ -31,13 +25,7 @@ class ProductCategoryController extends Controller
         ]);
     }
  
-    /**
-     * Store the Product category in Database
-     *
-     * @param \App\Http\Requests\Application\Settings\ProductCategory\Store $request
-     * 
-     * @return \Illuminate\Routing\Redirector|\Illuminate\Http\RedirectResponse
-     */
+
     public function store(Store $request)
     {
         $user = $request->user();
@@ -53,13 +41,6 @@ class ProductCategoryController extends Controller
         return redirect()->route('settings.product', ['company_uid' => $currentCompany->uid]);
     }
 
-    /**
-     * Display the Form for Editing Product category
-     *
-     * @param \Illuminate\Http\Request $request
-     * 
-     * @return \Illuminate\Http\Response
-     */
     public function edit(Request $request)
     {
         $product_category = ProductCategories::findOrFail($request->product_category);
@@ -69,13 +50,6 @@ class ProductCategoryController extends Controller
         ]);
     }
 
-    /**
-     * Update the Product category
-     *
-     * @param \App\Http\Requests\Application\Settings\ProductCategory\Update $request
-     * 
-     * @return \Illuminate\Routing\Redirector|\Illuminate\Http\RedirectResponse
-     */
     public function update(Update $request)
     {
         $user = $request->user();
@@ -93,13 +67,6 @@ class ProductCategoryController extends Controller
         return redirect()->route('settings.product', ['company_uid' => $currentCompany->uid]);
     }
 
-    /**
-     * Delete the Product category
-     *
-     * @param \Illuminate\Http\Request $request
-     * 
-     * @return \Illuminate\Routing\Redirector|\Illuminate\Http\RedirectResponse
-     */
     public function delete(Request $request)
     {
         $user = $request->user();

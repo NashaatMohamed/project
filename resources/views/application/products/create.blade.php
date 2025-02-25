@@ -8,8 +8,8 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="#"><i class="material-icons icon-20pt">home</i></a></li>
-                    <li class="breadcrumb-item" aria-current="page"><a
-                            href="{{ route('products', ['company_uid' => $currentCompany->uid]) }}">{{ __('messages.products') }}</a>
+                    <li class="breadcrumb-item" aria-current="page">
+                        <a href="{{ route('products', ['company_uid' => $currentCompany->uid]) }}">{{ __('messages.products') }}</a>
                     </li>
                     <li class="breadcrumb-item active" aria-current="page">{{ __('messages.create_product') }}</li>
                 </ol>
@@ -20,197 +20,264 @@
 @endsection
 
 @section('css_custom')
-    <!-- تضمين ملفات CSS المطلوبة -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css" />
-    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
 
-    <!-- تضمين ملفات JavaScript المطلوبة -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"></script>
+    <!-- Include SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
-    <!-- أنماط CSS المخصصة -->
-    <style>
-        /* ... جميع أنماط CSS الخاصة بك ... */
-        /* سأترك الأنماط كما هي لأنها صحيحة. */
-    </style>
+
+    <!-- Other CSS files -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css"/>
+
 @endsection
 
 @section('content')
     <form action="{{ route('products.store', ['company_uid' => $currentCompany->uid]) }}" method="POST"
-        enctype="multipart/form-data">
+          enctype="multipart/form-data">
         @include('layouts._form_errors')
         @csrf
 
         @include('application.products.create_form')
 
-        <!-- قسم التغييرات والجدول -->
+        <!-- Hidden input for main product stock -->
+        <input type="hidden" id="main_product_stock" name="main_product_stock" value="{{ $product->opening_stock }}">
 
+        <!-- Variations Section -->
         <div class="form-group d-flex justify-content-end mt-3">
             <input type="checkbox" id="toggleVariations" class="form-check-input">
             <label for="toggleVariations" class="ml-2">{{ __('messages.enable_variations') }}</label>
         </div>
         <div id="variationsSection" style="display: none;">
-        <div class="card card-form">
-            <div class="row no-gutters">
-
-                <div class="col-lg-4 card-body">
-
-                    <p><strong class="headings-color">{{ __('messages.product_variations') }}</strong></p>
-
-                </div>
-
-                <div class="col-lg-8">
-                    <div class="card-form__body card-body">
-                        <div class="row">
-
-                            <div class="col">
-                                <div class="form-group select-container required">
-                                    <label for="variation_group_id">{{ __('messages.variation_group') }}</label>
-                                    <select id="variation_group_id" name="variation_group_id" class="form-control select2">
-                                        <option disabled selected>{{ __('messages.select_variation_group') }}</option>
-                                        @foreach (get_variation_groups_select2_array($currentCompany->id) as $key => $val)
-                                            <option value="{{ $key }}" {{ old('variation_group_id') == $key ? 'selected' : '' }}>
-                                                {{ $val }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <div class="d-none select-footer">
-                                        <a href="{{ route('settings.variation_group.create', ['company_uid' => $currentCompany->uid]) }}"
-                                            target="_blank" class="font-weight-300">+
-                                            {{ __('messages.add_new_variation_group') }}</a>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                        <div class="row">
-                            <div class="col">
-                                <!-- Table for dynamic rows -->
-                                <div id="variation_table" class="table">
-                                    <div class="mb-3" style="margin-left: 20px;">
-                                        <input type="checkbox" id="toggleCheckbox" class="form-check-input" checked>
-                                        <span>{{ __('messages.enable_color') }}</span>
-                                    </div>
-
-                                    <div id="colors_id" class="mb-3">
-                                        <select id="attributes_select_color_id" data-toggle="select"
-                                            name="colors[]" multiple
-                                            class="attributes_select form-control"
-                                            data-select2-id="attributes_select_color_id">
-                                            @include('application.products.colors_options')
+            <div class="card card-form">
+                <div class="row no-gutters">
+                    <div class="col-lg-4 card-body">
+                        <p><strong class="headings-color">{{ __('messages.product_variations') }}</strong></p>
+                    </div>
+                    <div class="col-lg-8">
+                        <div class="card-form__body card-body">
+                            <div class="row">
+                                <div class="col">
+                                    <div class="form-group select-container required">
+                                        <label for="variation_group_id">{{ __('messages.variation_group') }}</label>
+                                        <select id="variation_group_id" name="variation_group_id"
+                                                class="form-control select2">
+                                            <option disabled
+                                                    selected>{{ __('messages.select_variation_group') }}</option>
+                                            @foreach (get_variation_groups_select2_array($currentCompany->id) as $key => $val)
+                                                <option value="{{ $key }}" {{ old('variation_group_id') == $key ? 'selected' : '' }}>
+                                                    {{ $val }}
+                                                </option>
+                                            @endforeach
                                         </select>
+                                        <div class="d-none select-footer">
+                                            <a href="{{ route('settings.variation_group.create', ['company_uid' => $currentCompany->uid]) }}"
+                                               target="_blank" class="font-weight-300">+
+                                                {{ __('messages.add_new_variation_group') }}</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <!-- Table for dynamic rows -->
+                                    <div id="variation_table" class="table">
+                                        <div class="mb-3" style="margin-left: 20px;">
+                                            <input type="checkbox" id="toggleCheckbox" class="form-check-input" checked>
+                                            <span>{{ __('messages.enable_color') }}</span>
+                                        </div>
+                                        <div id="colors_id" class="mb-3">
+                                            <select id="attributes_select_color_id" data-toggle="select" name="colors[]"
+                                                    multiple class="attributes_select form-control"
+                                                    data-select2-id="attributes_select_color_id">
+                                                @include('application.products.colors_options')
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 </div>
-
             </div>
-        </div>
 
-        <div class="text-center">
-            <input type="hidden" name="product" value="{{ $product->id ?? '' }}">
-            <input type="hidden" name="variation_group_id" value="{{ old('variation_group_id') }}"
-                id="variation_group_id_hidden">
+            <div class="text-center">
+                <input type="hidden" name="product" value="{{ $product->id ?? '' }}">
+                <input type="hidden" name="variation_group_id" value="{{ old('variation_group_id') }}"
+                       id="variation_group_id_hidden">
 
-            <div class="card card-form">
-                <div style="overflow: auto !important;">
-                    <div class="table-responsive">
-                        <table class="table mb-0 thead-border-top-0 table-striped" id="product_variation_table"
-                            style="overflow: auto !important;">
-                            <thead>
+                <div class="card card-form">
+                    <div style="overflow: auto !important;">
+                        <div class="table-responsive">
+                            <table class="table mb-0 thead-border-top-0 table-striped" id="product_variation_table"
+                                   style="overflow: auto !important;">
+                                <thead>
                                 <tr id="thead_rows">
                                     <th>{{ __('messages.name') }}</th>
                                     <th>{{ __('messages.attributes') }}</th>
                                     <th id="thead_rows_th">{{ __('messages.price') }}</th>
                                     <th>{{ __('messages.tax') }}</th>
-                                    <!-- <th>{{ __('messages.image') }}</th> -->
                                     <th>{{ __('messages.quantity') }}</th>
                                     <th>SKU</th>
                                     <th></th> <!-- New column for delete button -->
                                 </tr>
-                            </thead>
-                            <tbody id="product_variation_body">
+                                </thead>
+                                <tbody id="product_variation_body">
                                 <tr id="product_variation_row">
                                     <td><span class="product_title"> - </span></td>
                                     <td>
                                         <div class="form-group select-container">
                                             <label for="variation_select"></label>
                                             <select id="variation_select" name="variation_id[0][]" data-toggle="select"
-                                                class="variation_select form-control select2 select-with-footer"
-                                                multiple data-select2-id="variation_select">
+                                                    class="variation_select form-control select2 select-with-footer"
+                                                    multiple data-select2-id="variation_select">
                                             </select>
-
                                             <div class="d-none select-footer">
                                                 <a href="{{ route('settings.variation.create', ['company_uid' => $currentCompany->uid]) }}"
-                                                    target="_blank" class="font-weight-300">+
+                                                   target="_blank" class="font-weight-300">+
                                                     {{ __('messages.add_new_variation') }}</a>
                                             </div>
-
                                         </div>
                                     </td>
                                     <td class="body_rows_td">
-
                                         <input type="text" name="variation_price[]" id="variation_price" value=""
-                                            class="form-control" placeholder="{{ __('messages.price') }}">
-
+                                               class="form-control" placeholder="{{ __('messages.price') }}">
                                     </td>
-
-
-
                                     <td>
                                         <div class="form-group select-container">
                                             <label for="vat"></label>
                                             <select id="vat" name="vat[0][]" data-toggle="select"
-                                                class="vat form-control select2 select-with-footer"
-                                                multiple data-select2-id="vat">
+                                                    class="vat form-control select2 select-with-footer" multiple
+                                                    data-select2-id="vat">
                                             </select>
                                             <div class="d-none select-footer">
                                                 <a href="{{ route('settings.tax_types.create', ['company_uid' => $currentCompany->uid]) }}"
-                                                    target="_blank" class="font-weight-300">+
+                                                   target="_blank" class="font-weight-300">+
                                                     {{ __('messages.add_new_tax') }}</a>
                                             </div>
                                         </div>
                                     </td>
                                     <td>
-                                        <input name="quantity[]" type="number" class="form-control" id="quantity"
-                                            placeholder="{{ __('messages.quantity') }}"
-                                            value="">
+                                        <input name="quantity[]" type="number" class="form-control variation-stock"
+                                               placeholder="{{ __('messages.quantity') }}" value="0">
                                     </td>
                                     <td>
-                                        <input name="sku[]" type="text" class="form-control" id="sku"
-                                            placeholder="{{ __('messages.sku') }}" value="">
+                                        <input name="sku[]" type="text" class="form-control"
+                                               placeholder="{{ __('messages.sku') }}" value="">
                                     </td>
                                     <td>
-                                        <button type="button" class="btn btn-danger btn-sm delete-row">Delete
-                                        </button>
+                                        <button type="button" class="btn btn-danger btn-sm delete-row">Delete</button>
                                     </td> <!-- Delete button for the row -->
                                 </tr>
-                            </tbody>
-                        </table>
-
-                    </div>
-
-                    <div style="margin: 10px">
-                        <button type="button" id="clone_row" class="btn btn-light"><i
-                                class="material-icons icon-16pt">add</i>{{ __('messages.add_variation') }}</button>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div style="margin: 10px">
+                            <button type="button" id="clone_row" class="btn btn-light"><i
+                                        class="material-icons icon-16pt">add</i>{{ __('messages.add_variation') }}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-
         </div>
-    </div>
 
         <div class="form-group text-center mt-3">
             <button type="submit" class="btn btn-primary">{{ __('messages.save_product') }}</button>
         </div>
     </form>
-
 @endsection
 
 @section('page_body_scripts')
 
+    <!-- Include SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Other JS files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"></script>
+
+
+
+    <!-- stock synchronization -->
+    <script>
+        $(document).ready(function () {
+            function calculateVariationStockSum() {
+                let sum = 0;
+                $('.variation-stock').each(function () {
+                    sum += parseFloat($(this).val()) || 0;
+                });
+                return sum;
+            }
+
+            function calculateColorStockSum(variationRow) {
+                let sum = 0;
+                $(variationRow).find('.cloned_color_input').each(function () {
+                    sum += parseFloat($(this).val()) || 0;
+                });
+                return sum;
+            }
+
+            function showSweetAlert(message, type = 'error') {
+                Swal.fire({
+                    icon: type,
+                    title: 'Oops...',
+                    text: message,
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'OK',
+                });
+            }
+
+            $('body').on('input', '.variation-stock', function () {
+                const mainStockValue = parseFloat($('input[name="opening_stock"]').val()) || 0;
+                const variationStockSum = calculateVariationStockSum();
+
+                if (variationStockSum > mainStockValue) {
+                    showSweetAlert('{{ __("messages.variation_stock_exceeds_main_stock") }}');
+                    $(this).val(mainStockValue - (variationStockSum - parseFloat($(this).val())));
+                }
+            });
+
+
+            $('form').on('submit', function(e) {
+                const mainStockValue = parseFloat($('input[name="opening_stock"]').val()) || 0;
+                const variationStockSum = calculateVariationStockSum();
+
+                if (variationStockSum !== mainStockValue) {
+                    e.preventDefault();
+                    showSweetAlert('{{ __("messages.variation_stock_mismatch") }}');
+                    return;
+                }
+
+                const selectedColors = $('#attributes_select_color_id').val();
+
+                if ($('#toggleCheckbox').is(':checked') && selectedColors.length > 0) {
+                    let colorMismatchFound = false;
+
+                    $('.variation-stock').each(function() {
+                        const variationRow = $(this).closest('tr');
+                        const variationStock = parseFloat($(this).val()) || 0;
+                        const colorStockSum = calculateColorStockSum(variationRow);
+
+                        if (colorStockSum !== variationStock) {
+                            colorMismatchFound = true;
+                            return false;
+                        }
+                    });
+
+                    if (colorMismatchFound) {
+                        e.preventDefault();
+                        showSweetAlert('{{ __("messages.color_stock_mismatch") }}');
+                    }
+                }
+            });
+
+            $('#toggleCheckbox').on('change', function () {
+                if ($(this).is(':checked')) {
+                    $('#colors_id').show();
+                } else {
+                    $('#colors_id').hide();
+                }
+            });
+        });
+    </script>
     <!-- تهيئة المتغيرات والمكتبات -->
     <script>
         // تحويل بيانات الضرائب إلى JSON لاستخدامها في JavaScript
@@ -219,7 +286,7 @@
         // تعريف متغيرات جافاسكريبت
         var attributesTree = [];
 
-        $(document).ready(function() {
+        $(document).ready(function () {
             // تهيئة Select2 للحقول
             $('.variation_select').select2();
             $('.vat').select2();
@@ -228,18 +295,18 @@
 
     <!-- عند تغيير مجموعة التغييرات -->
     <script>
-        $(document).ready(function() {
-            $("#variation_group_id").change(function() {
+        $(document).ready(function () {
+            $("#variation_group_id").change(function () {
                 var variation_group_id = $("#variation_group_id").val() || 0; // Default to 0 if not selected
                 $("#variation_group_id_hidden").val(variation_group_id);
 
                 $.get("{{ route('ajax.get_variations_tree', ['company_uid' => $currentCompany->uid]) }}", {
                     variation_group_id: variation_group_id
-                }, function(response) {
+                }, function (response) {
 
                     // Update variation groups dropdown (always available)
                     $("#variation_group_id").empty().append('<option selected value="0">{{ __("messages.all_variation_group") }}</option>');
-                    $.each(response.variation_groups, function(index, group) {
+                    $.each(response.variation_groups, function (index, group) {
                         $("#variation_group_id").append('<option value="' + group.id + '">' + group.name + '</option>');
                     });
 
@@ -249,7 +316,7 @@
                     attributesTree = response.variations_tree; // Store filtered/unfiltered variations
 
                     // Destroy existing Select2 instances before re-initializing
-                    $('.variation_select:not(:first), .vat:not(:first)').each(function() {
+                    $('.variation_select:not(:first), .vat:not(:first)').each(function () {
                         if ($(this).data('select2')) {
                             $(this).select2('destroy');
                         }
@@ -280,12 +347,12 @@
 
     <!-- التعامل مع الألوان -->
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             $("#product_variation_btn").hide();
             $("#product_variation_row").hide();
 
             // حدث عند تغيير حالة checkbox
-            $('#toggleCheckbox').on('change', function() {
+            $('#toggleCheckbox').on('change', function () {
                 if ($(this).is(':checked')) {
                     $('#colors_id').show();
                 } else {
@@ -299,7 +366,7 @@
                 multiple: true,
                 width: 'resolve',
                 placeholder: "{{ __('messages.select_option') }}",
-                templateResult: function(option) {
+                templateResult: function (option) {
                     if (!option.id) {
                         return option.text;
                     }
@@ -307,7 +374,7 @@
                     return $('<span><span class="color-square" style="background-color:' + color +
                         '"></span>' + option.text + '</span>');
                 },
-                templateSelection: function(option) {
+                templateSelection: function (option) {
                     if (!option.id) {
                         return option.text;
                     }
@@ -317,7 +384,7 @@
                 }
             });
 
-            $('#attributes_select_color_id').on("change", function() {
+            $('#attributes_select_color_id').on("change", function () {
                 draw_product_variation_table();
             });
 
@@ -326,17 +393,17 @@
 
     <!-- رسم الصفوف -->
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
 
             // حذف الصف عند النقر على زر الحذف
-            $(document).on("click", ".delete-row", function() {
+            $(document).on("click", ".delete-row", function () {
                 $(this).closest("tr").remove();
             });
 
             // إضافة صف جديد عند النقر على زر "إضافة تغيير"
-            $(document).on("click", "#clone_row", function() {
+            $(document).on("click", "#clone_row", function () {
 
-                $('.variation_select, .vat').each(function() {
+                $('.variation_select, .vat').each(function () {
                     if ($(this).data('select2')) {
                         $(this).select2('destroy');
                     }
@@ -352,10 +419,10 @@
                     newRow.attr('class', 'cloned');
 
                     newRow.find("#variation_select").attr("data-select2-id", "variation_select" +
-                    rowsCount);
+                        rowsCount);
                     newRow.find("#vat").attr("data-select2-id", "vat" + rowsCount);
 
-                    newRow.find(".variation_select, input, .vat").each(function() {
+                    newRow.find(".variation_select, input, .vat").each(function () {
                         var oldName = $(this).attr('name');
                         var mergedName = oldName.replace(/\[\d*\]/, '[' + rowsCount + ']');
                         $(this).attr('name', mergedName);
@@ -388,20 +455,20 @@
 
             $(".clonedTh").remove();
             if ($("#colors_id").css('display') !== 'none') {
-                const selectedOptionValues = $("#attributes_select_color_id option:selected").map(function() {
+                const selectedOptionValues = $("#attributes_select_color_id option:selected").map(function () {
                     return $(this).text();
                 }).get();
 
                 const $tableHeaderRow = $("#thead_rows_th");
 
-                selectedOptionValues.forEach(function(value) {
+                selectedOptionValues.forEach(function (value) {
                     $("<th class='clonedTh'>" + value + "</th>").insertBefore($tableHeaderRow);
                 });
             }
 
             $(".clonedTd").remove();
             if ($("#colors_id").css('display') !== 'none') {
-                ($("#attributes_select_color_id").val()).forEach(function(data) {
+                ($("#attributes_select_color_id").val()).forEach(function (data) {
                     var color_input = '<input name="colors_quantity[' + data +
                         '][]" type="number" class="form-control cloned_color_input" placeholder="{{ __('messages.quantity') }}" />';
                     $("<td class='clonedTd'>" + color_input + "</td>").insertBefore($(".body_rows_td"));
@@ -412,18 +479,18 @@
 
     <!-- سكربتات إضافية -->
     <script>
-        $(function() {
+        $(function () {
             // تحديث عنوان المنتج عند تغيير الاسم
-            $("#pNameId").on("input", function() {
+            $("#pNameId").on("input", function () {
                 $(".product_title").text($(this).val());
             });
 
             // حساب مجموع الكميات للألوان
-            $("#product_variation_table").on("input", ".cloned_color_input", function() {
+            $("#product_variation_table").on("input", ".cloned_color_input", function () {
                 let sum = 0;
                 const $tr = $(this).closest("tr");
 
-                $tr.find(".cloned_color_input").each(function() {
+                $tr.find(".cloned_color_input").each(function () {
                     const value = parseFloat($(this).val());
                     sum += isNaN(value) ? 0 : value;
                 });
@@ -434,10 +501,10 @@
         });
     </script>
 
-{{--    // إظهار أو إخفاء القسم عند تغيير حالة الـ Checkbox--}}
+    {{--        // إظهار أو إخفاء القسم عند تغيير حالة الـ Checkbox--}}
     <script>
-        $(document).ready(function() {
-            $('#toggleVariations').change(function() {
+        $(document).ready(function () {
+            $('#toggleVariations').change(function () {
                 if ($(this).is(':checked')) {
                     $('#variationsSection').slideDown();
                 } else {
@@ -447,5 +514,5 @@
         });
     </script>
 
-
 @endsection
+

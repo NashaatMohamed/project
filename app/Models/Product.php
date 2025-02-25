@@ -129,7 +129,7 @@ class Product extends Model
      */
     public function invoice_items()
     {
-        return $this->hasMany(InvoiceItem::class);
+        return $this->hasMany(InvoiceItem::class,"product_id");
     }
 
     /**
@@ -202,16 +202,49 @@ class Product extends Model
         return !empty($this->attributes["cover"]) ? env("APP_URL").'/uploads/product/' .$this->attributes["cover"]   : "https://daleel-madani.org/sites/default/files/default_images/daleel-madani-default-cover-image.png";
     }
 
-//    public function getCustomers()
-//    {
-//        $customers = $this->Invoices->map(function ($invoice) {
-//            $customer = $invoice->customer;
-//            $customer['quantity'] = $invoice->items->sum('quantity');
-//            $customer['total'] = $invoice->total;
-//        });
-//
-//        return $customers->unique();
-//    }
+
+    public function incomingStock() :   HasMany
+    {
+        return $this->hasMany(StockMovement::class,"product_id")->where("type","in");
+    }
+
+    public function outgoingStock() :   HasMany
+    {
+        return $this->hasMany(StockMovement::class,"product_id")->where("type","out");
+    }
+
+    public function stockMovements() : HasMany
+    {
+        return $this->hasMany(StockMovement::class,"product_id");
+    }
+
+
+
+    public function getCustomers()
+    {
+        $invoice_ids = $this->invoice_items->pluck("invoice_id");
+        $invoices = Invoice::whereIn("id", $invoice_ids)->get();
+        $data = [];
+
+        foreach ($invoices as $invoice) {
+            $customer_id = $invoice->customer->id;
+
+            if (!isset($data[$customer_id])) {
+                $data[$customer_id] = [
+                    "customer" => $invoice->customer,
+                    "total_paid" => $invoice->items->where("product_id", $this->id)->sum("total"),
+                    "quantity_purchased" => $invoice->items->where("product_id", $this->id)->sum("quantity"),
+                ];
+            } else {
+                // تحديث البيانات للعميل الموجود
+                $data[$customer_id]["total_paid"] += $invoice->items->where("product_id", $this->id)->sum("total");
+                $data[$customer_id]["quantity_purchased"] += $invoice->items->where("product_id", $this->id)->sum("quantity");
+            }
+        }
+
+        return array_values($data); // إعادة القيم بدون المفاتيح لتكون المصفوفة نظيفة
+    }
+
 
 
 

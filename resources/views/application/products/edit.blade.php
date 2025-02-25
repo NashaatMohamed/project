@@ -103,7 +103,7 @@
 
                                         <div id="colors_id" class="mb-3">
                                             <select id="attributes_select_color_id" data-toggle="select"
-                                                    name="attributes_select_color_id" multiple
+                                                    name="colors[]" multiple
                                                     class="attributes_select form-control"
                                                     data-select2-id="attributes_select_color_id">
                                                 @include("application.products.colors_options")
@@ -168,7 +168,7 @@
                                                    autocomplete="off" value="{{ $variation->price }}">
                                         </td>
                                         <td>
-                                            <input name="quantity[{{ $index }}]" type="number" class="form-control" id="quantity_{{ $index }}"
+                                            <input name="quantity[{{ $index }}]" type="number" class="form-control variation-stock" id="quantity_{{ $index }}"
                                                    placeholder="{{ __('messages.quantity') }}"
                                                    value="{{ $variation->quantity }}">
                                         </td>
@@ -204,6 +204,91 @@
 @endsection
 
 @section('page_body_scripts')
+
+    <!-- stock synchronization -->
+    <script>
+        $(document).ready(function () {
+            function calculateVariationStockSum() {
+                let sum = 0;
+                $('.variation-stock').each(function () {
+                    sum += parseFloat($(this).val()) || 0;
+                });
+                return sum;
+            }
+
+            function calculateColorStockSum(variationRow) {
+                let sum = 0;
+                $(variationRow).find('.cloned_color_input').each(function () {
+                    sum += parseFloat($(this).val()) || 0;
+                });
+                return sum;
+            }
+
+            function showSweetAlert(message, type = 'error') {
+                Swal.fire({
+                    icon: type,
+                    title: 'Oops...',
+                    text: message,
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'OK',
+                });
+            }
+
+            $('body').on('input', '.variation-stock', function () {
+                const mainStockValue = parseFloat($('input[name="opening_stock"]').val()) || 0;
+                const variationStockSum = calculateVariationStockSum();
+
+                if (variationStockSum > mainStockValue) {
+                    showSweetAlert('{{ __("messages.variation_stock_exceeds_main_stock") }}');
+                    $(this).val(mainStockValue - (variationStockSum - parseFloat($(this).val())));
+                }
+            });
+
+
+            $('form').on('submit', function(e) {
+                const mainStockValue = parseFloat($('input[name="opening_stock"]').val()) || 0;
+                const variationStockSum = calculateVariationStockSum();
+
+                if (variationStockSum !== mainStockValue) {
+                    e.preventDefault();
+                    showSweetAlert('{{ __("messages.variation_stock_mismatch") }}');
+                    return;
+                }
+
+                const selectedColors = $('#attributes_select_color_id').val();
+
+                if ($('#toggleCheckbox').is(':checked') && selectedColors.length > 0) {
+                    let colorMismatchFound = false;
+
+                    $('.variation-stock').each(function() {
+                        const variationRow = $(this).closest('tr');
+                        const variationStock = parseFloat($(this).val()) || 0;
+                        const colorStockSum = calculateColorStockSum(variationRow);
+
+                        if (colorStockSum !== variationStock) {
+                            colorMismatchFound = true;
+                            return false;
+                        }
+                    });
+
+                    if (colorMismatchFound) {
+                        e.preventDefault();
+                        showSweetAlert('{{ __("messages.color_stock_mismatch") }}');
+                    }
+                }
+            });
+
+            $('#toggleCheckbox').on('change', function () {
+                if ($(this).is(':checked')) {
+                    $('#colors_id').show();
+                } else {
+                    $('#colors_id').hide();
+                }
+            });
+        });
+    </script>
+
+
     <script>
         var attributesTree = [];
         var TaxAttributesTree = {!! json_encode(get_tax_types_select2_array($currentCompany->id)) !!};
@@ -226,9 +311,8 @@
                 variationGroupDropdown.val(variationGroupId).trigger('change');
             }
 
-            // Handle change event for the variation group dropdown
             variationGroupDropdown.change(function () {
-                var variation_group_id = $(this).val() || 0; // Default to 0 if not selected
+                var variation_group_id = $(this).val() || 0;
                 $("#variation_group_id_hidden").val(variation_group_id);
 
                 $.get("{{ route('ajax.get_variations_tree', ['company_uid' => $currentCompany->uid]) }}", {
@@ -236,21 +320,18 @@
                 }, function (response) {
                     attributesTree = response;
 
-                    // Reinitialize Select2 for all variation dropdowns
                     initializeSelect2();
                 });
             });
 
-            // Trigger change on page load to ensure variations and groups are loaded
             variationGroupDropdown.trigger('change');
 
             // Handle cloning of rows
             $(document).on("click", "#clone_row", function () {
-                var newRow = $('#product_variation_row').clone(true).show(); // Clone the table row
-                newRow.removeAttr('id'); // Remove the ID attribute from the cloned row
-                newRow.attr('class', 'cloned'); // Add a class to identify cloned rows
+                var newRow = $('#product_variation_row').clone(true).show();
+                newRow.removeAttr('id');
+                newRow.attr('class', 'cloned');
 
-                // Update input and select names to avoid conflicts
                 var rowsCount = $('.cloned').length;
                 newRow.find(".variation_select, input, .vat").each(function () {
                     var oldName = $(this).attr('name');
@@ -258,16 +339,13 @@
                     $(this).attr('name', mergedName);
                 });
 
-                // Append the new row to the table
                 newRow.appendTo($('#product_variation_body'));
 
-                // Initialize Select2 for the new row
                 initializeSelect2(newRow);
             });
 
-            // Function to initialize Select2 dropdowns
             function initializeSelect2(context) {
-                var $context = context ? $(context) : $('body'); // Use provided context or default to 'body'
+                var $context = context ? $(context) : $('body');
 
                 $context.find('.variation_select').select2({
                     placeholder: '{{ __('messages.select_variation') }}',
@@ -285,7 +363,6 @@
             }
         });
     </script>
-
 
     <!-- التعامل مع الألوان -->
     <script>
