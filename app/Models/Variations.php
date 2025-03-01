@@ -1,6 +1,6 @@
 <?php
 
- // app/Models/Variations.php
+// app/Models/Variations.php
 
 namespace App\Models;
 
@@ -41,14 +41,13 @@ class Variations extends Model
      */
     public function variationGroup() : BelongsToMany
     {
-        return $this->belongsToMany(Variations::class, 'group_variations')
-                    ->withTimestamps();
+        return $this->belongsToMany(VariationGroup::class, 'group_variations',"variations_id", "variation_group_id");
     }
 
 
     public function groupVariations()  :HasMany
     {
-        return $this->hasMany(GroupVariation::class, 'variation_group_id');
+        return $this->hasMany(GroupVariation::class, 'variations_id');
     }
     /**
      * وصول accessor لـ "children"
@@ -72,6 +71,6 @@ class Variations extends Model
     public static function getSelect2Array($company_id)
     {
         return self::findByCompany($company_id)
-                   ->pluck('name AS text', 'id');
+            ->pluck('name AS text', 'id');
     }
 }

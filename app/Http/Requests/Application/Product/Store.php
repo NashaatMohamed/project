@@ -45,21 +45,12 @@ class Store extends FormRequest
             "colors_quantity" => 'nullable|array',
             "colors_quantity.*" => 'nullable|array',
             "colors_quantity.*.*" => 'nullable|numeric',
-//
-//            // الحقول المخصصة
-//            'custom_fields' => 'nullable|array',
-//            'custom_fields.*' => 'nullable|string|max:190',
-//
-//            // الحقول المتعلقة بالضرائب
-//            'taxes' => 'nullable|array',
-//            'taxes.*' => 'nullable|integer|exists:taxes,id',
-//
-//            // الحقول المتعلقة بالتغييرات (Variations)
-            'variation_price' => 'required|array',
+
+            'variation_price' => 'nullable|array',
             'variation_price.*' => 'nullable|numeric',
 
-             'variation_id' => 'nullable|array',
-             'variation_id.*' => 'nullable',
+            'variation_id' => 'nullable|array',
+            'variation_id.*' => 'nullable',
 //
             'quantity' => 'nullable|array',
             'quantity.*' => 'nullable',

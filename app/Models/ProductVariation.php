@@ -47,7 +47,7 @@ class ProductVariation extends Model
     public function getFullProductName(): string
     {
         $variation_attributes_names = $this->getVariationAttributes()->map(function ($value) {
-            return $value->name;
+            return $value->name ?? '';
         });
         return $this->product->name . ' ' . $variation_attributes_names->implode(' ');
     }

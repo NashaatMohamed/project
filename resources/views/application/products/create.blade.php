@@ -47,6 +47,8 @@
             <input type="checkbox" id="toggleVariations" class="form-check-input">
             <label for="toggleVariations" class="ml-2">{{ __('messages.enable_variations') }}</label>
         </div>
+
+
         <div id="variationsSection" style="display: none;">
             <div class="card card-form">
                 <div class="row no-gutters">
@@ -225,26 +227,26 @@
                 });
             }
 
-            $('body').on('input', '.variation-stock', function () {
-                const mainStockValue = parseFloat($('input[name="opening_stock"]').val()) || 0;
-                const variationStockSum = calculateVariationStockSum();
+            {{--$('body').on('input', '.variation-stock', function () {--}}
+            {{--    const mainStockValue = parseFloat($('input[name="opening_stock"]').val()) || 0;--}}
+            {{--    const variationStockSum = calculateVariationStockSum();--}}
 
-                if (variationStockSum > mainStockValue) {
-                    showSweetAlert('{{ __("messages.variation_stock_exceeds_main_stock") }}');
-                    $(this).val(mainStockValue - (variationStockSum - parseFloat($(this).val())));
-                }
-            });
+            {{--    if (variationStockSum > mainStockValue) {--}}
+            {{--        showSweetAlert('{{ __("messages.variation_stock_exceeds_main_stock") }}');--}}
+            {{--        $(this).val(mainStockValue - (variationStockSum - parseFloat($(this).val())));--}}
+            {{--    }--}}
+            {{--});--}}
 
 
             $('form').on('submit', function(e) {
                 const mainStockValue = parseFloat($('input[name="opening_stock"]').val()) || 0;
                 const variationStockSum = calculateVariationStockSum();
 
-                if (variationStockSum !== mainStockValue) {
-                    e.preventDefault();
-                    showSweetAlert('{{ __("messages.variation_stock_mismatch") }}');
-                    return;
-                }
+                {{--if (variationStockSum !== mainStockValue) {--}}
+                {{--    e.preventDefault();--}}
+                {{--    showSweetAlert('{{ __("messages.variation_stock_mismatch") }}');--}}
+                {{--    return;--}}
+                {{--}--}}
 
                 const selectedColors = $('#attributes_select_color_id').val();
 

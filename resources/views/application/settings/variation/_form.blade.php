@@ -8,11 +8,12 @@
 </div>
 
 <div class="form-group">
+
     <label for="variation_group">{{ __('messages.variation_group') }}</label>
     <select class="form-control select2" id="variation_group" name="variation_group_id" required>
         <option value="">{{ __('messages.select_variation_group') }}</option>
         @foreach($variationGroups as $group)
-            <option value="{{ $group->id }}" {{ old('variation_group', $variation->variation_group_id ?? '') == $group->id ? 'selected' : '' }}>
+            <option value="{{ $group->id }}" {{ old('variation_group', $variation->variationGroup->first()->id ?? '') == $group->id ? 'selected' : '' }}>
                 {{ $group->name }}
             </option>
         @endforeach

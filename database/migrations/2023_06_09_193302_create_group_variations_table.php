@@ -15,8 +15,15 @@ class CreateGroupVariationsTable extends Migration
     {
         Schema::create('group_variations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId("variations_id")->nullable()->constrained("variations");
-            $table->foreignId("variation_group_id")->nullable()->constrained("variation_groups");
+            $table->foreignId("variations_id")->nullable()
+                ->constrained("variations")
+                ->nullOnDelete();
+
+            $table->unsignedInteger("variation_group_id")->nullable();
+//            $table->foreignId("variation_group_id")->nullable()
+//                ->constrained("variation_groups")
+//                ->nullOnDelete(); // Removes the incorrect `name()` and sets NULL on delete
+
             $table->timestamps();
         });
     }

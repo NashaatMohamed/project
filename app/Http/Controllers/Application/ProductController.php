@@ -71,11 +71,10 @@ class ProductController extends Controller
         $data = $request->validated() + ['company_id' => $currentCompany->id];
 
         $data['colors_quantity'] = array_key_exists("colors_quantity",$data) ? array_map(fn($q) => array_values(array_filter($q)), $data['colors_quantity']) : [];
-        // إنشاء المنتج الرئيسي
         $product = $this->storeProducts($data);
 
-        // التحقق من وجود بيانات تنوعات المنتج
         if (!empty($data['variation_id'])) {
+            $product->opening_stock = 0;
             foreach ($data['variation_id'] as $index => $variationGroup) {
                 $productVariation = ProductVariation::query()->create([
                     "product_id" => $product->id,
@@ -85,6 +84,9 @@ class ProductController extends Controller
                     "company_id" => $currentCompany->id,
                     "variations_json" => json_encode($variationGroup)
                 ]);
+
+                $product->opening_stock += $productVariation->quantity;
+                $product->save();
 
                 // تخزين الألوان إذا كان هناك ProductVariation صالح
                 if ($productVariation && !empty($data['colors'])) {
@@ -127,7 +129,7 @@ class ProductController extends Controller
             "price" => $data['price'] ?? null,
             "unit_id" => $data["unit_id"] ?? null,
             "warehouse_id" => $data["warehouse_id"] ?? null,
-            "opening_stock" => $data["opening_stock"] ?? null,
+            "opening_stock" => $data["opening_stock"] ?? 0,
             "quantity_alarm" => $data["quantity_alarm"] ?? null,
             "brand_id" => $data["brand_id"] ?? null,
             "description" => $data["description"] ?? null,
@@ -135,7 +137,6 @@ class ProductController extends Controller
             "barcode" => $data['barcode'] ?? null,
             "company_id" => $data['company_id'] ?? null,
             "category_id" => $data['category_id'] ?? null,
-//            "variation_group_id" => (int) $data['variation_group_id'] == 0 ? null : (int) $data['variation_group_id'],
         ]);
     }
 
@@ -229,6 +230,7 @@ class ProductController extends Controller
         if (empty($data['variation_id'])) {
             $product->productVariations()->delete();
         } else {
+            $product->opening_stock = 0;
             foreach ($data['variation_id'] as $index => $variationGroup) {
                 $variationsJson = json_encode($variationGroup);
 
@@ -251,6 +253,9 @@ class ProductController extends Controller
                         "variations_json" => $variationsJson
                     ]);
                 }
+
+                $product->opening_stock += $productVariation->quantity;
+                $product->save();
 
                 // Update or create colors for the ProductVariation
                 if ($productVariation && !empty($data['colors'])) {
