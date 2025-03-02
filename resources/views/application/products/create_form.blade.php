@@ -65,15 +65,24 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col">
-                        <div class="form-group required">
-                            <label for="price">{{ __('messages.price') }}</label>
 
-                            <input name="price" type="text" class="form-control price_input"
-                                   placeholder="{{ __('messages.price') }}" autocomplete="off"
-                                   value="{{ $product->price ?? 0 }}" required>
+                    <div class="col">
+                        <div class="form-group ">
+                            <label for="quantity_alarm">{{ __('messages.quantity_alarm') }}</label>
+                            <input name="quantity_alarm" type="number" class="form-control"
+                                   placeholder="{{ __('messages.quantity_alarm') }}"
+                                   value="{{ $product->quantity_alarm }}" required>
                         </div>
                     </div>
+{{--                    <div class="col">--}}
+{{--                        <div class="form-group required">--}}
+{{--                            <label for="price">{{ __('messages.price') }}</label>--}}
+
+{{--                            <input name="price" type="text" class="form-control price_input"--}}
+{{--                                   placeholder="{{ __('messages.price') }}" autocomplete="off"--}}
+{{--                                   value="{{ $product->price ?? 0 }}" required>--}}
+{{--                        </div>--}}
+{{--                    </div>--}}
                 </div>
 
 
@@ -99,26 +108,26 @@
                 </div>
 
 
-                <div class="row">
+{{--                <div class="row">--}}
 
-                    <div class="col">
-                        <div class="form-group ">
-                            <label for="opening_stock">{{ __('messages.opening_stock') }}</label>
-                            <input name="opening_stock" type="text" class="form-control  "
-                                   placeholder="{{ __('messages.opening_stock') }}" autocomplete="off"
-                                   value="{{ $product->opening_stock }}">
-                        </div>
-                    </div>
+{{--                    <div class="col">--}}
+{{--                        <div class="form-group ">--}}
+{{--                            <label for="opening_stock">{{ __('messages.opening_stock') }}</label>--}}
+{{--                            <input name="opening_stock" type="text" class="form-control  "--}}
+{{--                                   placeholder="{{ __('messages.opening_stock') }}" autocomplete="off"--}}
+{{--                                   value="{{ $product->opening_stock }}">--}}
+{{--                        </div>--}}
+{{--                    </div>--}}
 
-                    <div class="col">
-                        <div class="form-group ">
-                            <label for="quantity_alarm">{{ __('messages.quantity_alarm') }}</label>
-                            <input name="quantity_alarm" type="number" class="form-control"
-                                   placeholder="{{ __('messages.quantity_alarm') }}"
-                                   value="{{ $product->quantity_alarm }}" required>
-                        </div>
-                    </div>
-                </div>
+{{--                    <div class="col">--}}
+{{--                        <div class="form-group ">--}}
+{{--                            <label for="quantity_alarm">{{ __('messages.quantity_alarm') }}</label>--}}
+{{--                            <input name="quantity_alarm" type="number" class="form-control"--}}
+{{--                                   placeholder="{{ __('messages.quantity_alarm') }}"--}}
+{{--                                   value="{{ $product->quantity_alarm }}" required>--}}
+{{--                        </div>--}}
+{{--                    </div>--}}
+{{--                </div>--}}
 
 
                 <div class="row">

@@ -40,10 +40,19 @@ class ProductVariation extends Model
         'colors' => 'json',
     ];
 
+
+    protected $appends = [
+        'name',
+    ];
     /**
      * Get the full name of the product variation.
      */
 
+
+    public function getNameAttribute(): string
+    {
+       return $this->getFullProductName();
+    }
     public function getFullProductName(): string
     {
         $variation_attributes_names = $this->getVariationAttributes()->map(function ($value) {

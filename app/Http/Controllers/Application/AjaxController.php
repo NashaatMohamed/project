@@ -8,6 +8,7 @@ use App\Models\GroupVariation;
 use App\Models\Invoice;
 use App\Models\Product;
 use App\Models\ProductCategories;
+use App\Models\ProductVariation;
 use App\Models\VariationAttributes;
 use App\Models\VariationGroup;
 use App\Models\Variations;
@@ -77,13 +78,7 @@ class AjaxController extends Controller
         return response()->json($invoices);
     }
 
-    /**
-     * Get Products Ajax Request
-     *
-     * @param \Illuminate\Http\Request $request
-     *
-     * @return json
-     */
+
     public function products(Request $request)
     {
         $user = $request->user();
@@ -94,6 +89,11 @@ class AjaxController extends Controller
             ->where('hide', false)
             ->with('taxes')
             ->get();
+
+//        $products = ProductVariation::query()->whereCompanyId($currentCompany->id)
+////            ->select('id', 'name AS text', 'price')
+////            ->with('taxes')
+//            ->get();
 
         return response()->json($products);
     }

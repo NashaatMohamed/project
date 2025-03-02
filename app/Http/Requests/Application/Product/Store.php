@@ -24,7 +24,7 @@ class Store extends FormRequest
             // الحقول الأساسية للمنتج
             'name' => 'required|string|max:190',
             'unit_id' => 'required|integer|exists:product_units,id',
-            'price' => 'required',
+            'price' => 'nullable',
             'description' => 'nullable|string|max:500',
             'currency_id' => 'nullable|integer|exists:currencies,id',
             'cover' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -83,9 +83,9 @@ class Store extends FormRequest
 
     public function prepareForValidation()
     {
-        $this->merge([
-            "price" => ltrim(preg_replace('/[^0-9\.]/', '', $this->price), '.'),
-        ]);
+//        $this->merge([
+//            "price" => ltrim(preg_replace('/[^0-9\.]/', '', $this->price), '.'),
+//        ]);
     }
 
 

@@ -21,6 +21,7 @@
     @include('application.products._filters')
 
     <div class="card">
-        @include('application.products._table')
+{{--        @include('application.products._table')--}}
+        @include('application.products.variations._table'))
     </div>
 @endsection

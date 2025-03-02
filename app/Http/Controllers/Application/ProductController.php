@@ -11,6 +11,7 @@ use App\Models\ProductUnit;
 use App\Models\ProductVariation;
 use App\Models\ProductVariationColor;
 use App\Models\Warehouses;
+use App\Services\Products\ProductService;
 use App\Services\StockMovement\StockMovementService;
 use Illuminate\Http\Request;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -19,22 +20,19 @@ use Spatie\QueryBuilder\QueryBuilder;
 class ProductController extends Controller
 {
 
+    protected $productService;
+
+    public function __construct(ProductService $productService)
+    {
+        $this->productService = $productService;
+
+    }
     public function index(Request $request)
     {
         $user = $request->user();
         $currentCompany = $user->currentCompany();
-
-        // Get Products by Company
-        $products = QueryBuilder::for(Product::findByCompany($currentCompany->id))
-            ->where('hide', false)
-            ->allowedFilters([
-                AllowedFilter::partial('name'),
-                AllowedFilter::exact('unit_id'),
-            ])
-            ->oldest()
-            ->paginate()
-            ->appends(request()->query());
-
+        $products = $this->productService->getProductIndex($currentCompany);
+        
         return view('application.products.index', [
             'products' => $products
         ]);
@@ -66,6 +64,7 @@ class ProductController extends Controller
 
     public function store(Store $request)
     {
+//        dd($request->validated());
         $user = $request->user();
         $currentCompany = $user->currentCompany();
         $data = $request->validated() + ['company_id' => $currentCompany->id];
@@ -86,6 +85,7 @@ class ProductController extends Controller
                 ]);
 
                 $product->opening_stock += $productVariation->quantity;
+                $product->price += $productVariation->price;
                 $product->save();
 
                 // تخزين الألوان إذا كان هناك ProductVariation صالح
@@ -160,16 +160,10 @@ class ProductController extends Controller
     {
         $currentCompany = Company::where('uid', $company_uid)->firstOrFail();
 
-        $product = Product::with(['ProductVariations' => function ($query) {
-            $query->orderBy('id', 'asc')->limit(1);
-        }])
-            ->where('id', $id)
-            ->where('company_id', $currentCompany->id)
-            ->firstOrFail();
-
+        $product = $this->productService->getShowVariation($currentCompany, $id);
 
         return view('application.products.show_first_variation', [
-            'product' => $product,
+            'product_variation' => $product,
             'currentCompany' => $currentCompany,
         ]);
     }
@@ -255,6 +249,7 @@ class ProductController extends Controller
                 }
 
                 $product->opening_stock += $productVariation->quantity;
+                $product->price += $productVariation->price;
                 $product->save();
 
                 // Update or create colors for the ProductVariation

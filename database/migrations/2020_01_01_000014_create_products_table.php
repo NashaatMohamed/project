@@ -21,7 +21,7 @@ class CreateProductsTable extends Migration
              
 
             $table->unsignedBigInteger('currency_id')->nullable();
-            $table->unsignedBigInteger('price');
+            $table->float('price')->nullable()->default(0);
 
             $table->string('name');
             $table->string('description')->nullable();

@@ -203,7 +203,7 @@ Route::group(['namespace' => 'Application', 'prefix' => '/{company_uid}', 'middl
     Route::PUT('/products/{product}/edit', 'ProductController@update')->name('products.update');
     Route::get('/products/{product}/delete', 'ProductController@delete')->name('products.delete');
     Route::get('/products/{product}/show', [ProductController::class, 'show'])->name('products.show');
-    Route::get('/products/{product}/show_first_variation', [ProductController::class, 'showFirstVariation'])->name('products.show.first.variation');
+    Route::get('/products/{variation}/show_first_variation', [ProductController::class, 'showFirstVariation'])->name('products.show.first.variation');
     Route::post('/products/{product}/update_variation', 'ProductController@updateVariation')->name('products.update_variation');
     
 

@@ -10,6 +10,7 @@ use Bavix\Wallet\Traits\HasWallets;
 use Bavix\Wallet\Interfaces\WalletFloat;
 use Bavix\Wallet\Interfaces\Wallet;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Company extends Model implements Wallet, WalletFloat
 {
@@ -108,9 +109,14 @@ class Company extends Model implements Wallet, WalletFloat
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function products()
+    public function products() : HasMany
     {
-        return $this->hasMany(Product::class);
+        return $this->hasMany(Product::class,"company_id");
+    }
+
+    public function product_variations() : HasMany
+    {
+        return $this->hasMany(ProductVariation::class,"company_id");
     }
 
     /**

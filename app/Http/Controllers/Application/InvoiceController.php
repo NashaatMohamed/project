@@ -18,13 +18,7 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class InvoiceController extends Controller
 {
-    /**
-     * Display Invoices Page
-     *
-     * @param \Illuminate\Http\Request $request
-     *
-     * @return \Illuminate\Http\Response
-     */
+
     public function index(Request $request)
     {
         $user = $request->user();
@@ -64,13 +58,6 @@ class InvoiceController extends Controller
         ]);
     }
 
-    /**
-     * Display the Form for Creating New Invoice
-     *
-     * @param \Illuminate\Http\Request $request
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function create(Request $request)
     {
         $user = $request->user();
@@ -90,6 +77,7 @@ class InvoiceController extends Controller
         // Also for filling form data and the ui
         $customers = $currentCompany->customers;
         $products = $currentCompany->products;
+        $product_variations = $currentCompany->product_variations;
         $tax_per_item = (boolean) $currentCompany->getSetting('tax_per_item');
         $discount_per_item = (boolean) $currentCompany->getSetting('discount_per_item');
         
@@ -99,6 +87,7 @@ class InvoiceController extends Controller
             'products' => $products,
             'tax_per_item' => $tax_per_item,
             'discount_per_item' => $discount_per_item,
+            "product_variations" => $product_variations
         ]);
     }
 
