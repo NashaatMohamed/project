@@ -84,16 +84,23 @@ class AjaxController extends Controller
         $user = $request->user();
         $currentCompany = $user->currentCompany();
 
-        $products = Product::findByCompany($currentCompany->id)
-            ->select('id', 'name AS text', 'price')
-            ->where('hide', false)
-            ->with('taxes')
-            ->get();
-
-//        $products = ProductVariation::query()->whereCompanyId($currentCompany->id)
-////            ->select('id', 'name AS text', 'price')
-////            ->with('taxes')
+//        $products = Product::findByCompany($currentCompany->id)
+//            ->select('id', 'name AS text', 'price')
+//            ->where('hide', false)
+//            ->with('taxes')
 //            ->get();
+
+        $products = ProductVariation::query()->whereCompanyId($currentCompany->id)
+            ->get()
+            ->map(function ($variation) {
+                return [
+                    'id' => $variation->id,
+                    'text' => $variation->getFullProductName(),
+                    'price' => $variation->price,
+                    'taxes' => $variation->taxes ?? []
+                ];
+            });
+
 
         return response()->json($products);
     }

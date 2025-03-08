@@ -6,6 +6,7 @@ use App\Events\InvoiceSentEvent;
 use App\Http\Controllers\Controller;
 use App\Mails\InvoiceToCustomer;
 use App\Models\Invoice;
+use App\Services\Products\ProductVariationForInvoiceService;
 use Illuminate\Http\Request;
 use App\Http\Requests\Application\Invoice\Store;
 use App\Http\Requests\Application\Invoice\Update;
@@ -28,13 +29,13 @@ class InvoiceController extends Controller
         if($request->tab == 'all') {
             $query = Invoice::findByCompany($currentCompany->id)->orderBy('invoice_number', 'desc');
             $tab = 'all';
-        } else if($request->tab == 'due') { 
+        } else if($request->tab == 'due') {
             $query = Invoice::findByCompany($currentCompany->id)->nonArchived()->unpaid()->nonDraft()->whereDate('due_date', '>=', Carbon::now())->orderBy('due_date');
             $tab = 'due';
-        } else if($request->tab == 'overdue') { 
+        } else if($request->tab == 'overdue') {
             $query = Invoice::findByCompany($currentCompany->id)->nonArchived()->unpaid()->nonDraft()->whereDate('due_date', '<=', Carbon::now())->orderBy('due_date');
             $tab = 'overdue';
-        } else if($request->tab == 'recurring') { 
+        } else if($request->tab == 'recurring') {
             $query = Invoice::findByCompany($currentCompany->id)->nonArchived()->recurring()->nonDraft()->orderBy('invoice_number', 'desc');
             $tab = 'recurring';
         } else {
@@ -80,7 +81,7 @@ class InvoiceController extends Controller
         $product_variations = $currentCompany->product_variations;
         $tax_per_item = (boolean) $currentCompany->getSetting('tax_per_item');
         $discount_per_item = (boolean) $currentCompany->getSetting('discount_per_item');
-        
+
         return view('application.invoices.create', [
             'invoice' => $invoice,
             'customers' => $customers,
@@ -108,12 +109,12 @@ class InvoiceController extends Controller
         if (!$canAdd) {
             session()->flash('alert-danger', __('messages.you_have_reached_the_limit'));
             return redirect()->route('invoices', ['company_uid' => $currentCompany->uid]);
-        } 
+        }
 
         // Get company based settings
         $tax_per_item = (boolean) $currentCompany->getSetting('tax_per_item');
         $discount_per_item = (boolean) $currentCompany->getSetting('discount_per_item');
- 
+
         // Save Invoice to Database
         $invoice = Invoice::create([
             'invoice_date' => $request->invoice_date,
@@ -153,31 +154,10 @@ class InvoiceController extends Controller
         $discounts = $request->discount;
 
         // Add products (invoice items)
-        for ($i=0; $i < count($products); $i++) {
-            $product = Product::firstOrCreate(
-                ['id' => $products[$i], 'company_id' => $currentCompany->id],
-                ['name' => $products[$i], 'price' => $prices[$i], 'hide' => 1]
-            );
 
-            $item = $invoice->items()->create([
-                'product_id' => $product->id,
-                'company_id' => $currentCompany->id,
-                'quantity' => $quantities[$i],
-                'discount_type' => 'percent',
-                'discount_val' => $discounts[$i] ?? 0,
-                'price' => $prices[$i],
-                'total' => $totals[$i],
-            ]);
+        (new ProductVariationForInvoiceService())->handleInvoiceProduct(
+            $products, $quantities, $prices, $discounts, $totals, $taxes, $invoice, $currentCompany,$user);
 
-            // Add taxes for Invoice Item if it is given
-            if ($taxes && array_key_exists($i, $taxes)) {
-                foreach ($taxes[$i] as $tax) {
-                    $item->taxes()->create([
-                        'tax_type_id' => $tax
-                    ]);
-                }
-            }
-        }
 
         // If Invoice based taxes are given
         if ($request->has('total_taxes')) {
@@ -191,20 +171,13 @@ class InvoiceController extends Controller
         // Add custom field values
         $invoice->addCustomFields($request->custom_fields);
 
-        // Record product 
+        // Record product
         $currentCompany->subscription('main')->recordFeatureUsage('invoices_per_month');
 
         session()->flash('alert-success', __('messages.invoice_added'));
         return redirect()->route('invoices.details', ['invoice' => $invoice->id, 'company_uid' => $currentCompany->uid]);
     }
 
-    /**
-     * Display the Invoice Details Page
-     *
-     * @param \Illuminate\Http\Request $request
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function show(Request $request)
     {
         $invoice = Invoice::findOrFail($request->invoice);
@@ -296,13 +269,7 @@ class InvoiceController extends Controller
         return redirect()->route('invoices.details', ['invoice' => $invoice->id, 'company_uid' => $currentCompany->uid]);
     }
 
-    /**
-     * Display the Form for Editing Invoice
-     *
-     * @param \Illuminate\Http\Request $request
-     *
-     * @return \Illuminate\Http\Response
-     */
+
     public function edit(Request $request)
     {
         $user = $request->user();
@@ -313,6 +280,8 @@ class InvoiceController extends Controller
         // Filling form data and the ui
         $customers = $currentCompany->customers;
         $products = $currentCompany->products;
+        $product_variations = $currentCompany->product_variations;
+
 
         return view('application.invoices.edit', [
             'invoice' => $invoice,
@@ -320,6 +289,7 @@ class InvoiceController extends Controller
             'products' => $products,
             'tax_per_item' => $invoice->tax_per_item,
             'discount_per_item' => $invoice->discount_per_item,
+            'product_variations' => $product_variations
         ]);
     }
 
@@ -397,31 +367,9 @@ class InvoiceController extends Controller
         $invoice->items()->delete();
 
         // Add products (invoice items)
-        for ($i=0; $i < count($products); $i++) {
-            $product = Product::firstOrCreate(
-                ['id' => $products[$i], 'company_id' => $currentCompany->id],
-                ['name' => $products[$i], 'price' => $prices[$i], 'hide' => 1]
-            );
 
-            $item = $invoice->items()->create([
-                'product_id' => $product->id,
-                'company_id' => $currentCompany->id,
-                'quantity' => $quantities[$i],
-                'discount_type' => 'percent',
-                'discount_val' => $discounts[$i] ?? 0,
-                'price' => $prices[$i],
-                'total' => $totals[$i],
-            ]);
-
-            // Add taxes for Invoice Item if it is given
-            if ($taxes && array_key_exists($i, $taxes)) {
-                foreach ($taxes[$i] as $tax) {
-                    $item->taxes()->create([
-                        'tax_type_id' => $tax
-                    ]);
-                }
-            }
-        }
+        (new ProductVariationForInvoiceService())->handleInvoiceProduct(
+            $products, $quantities, $prices, $discounts, $totals, $taxes, $invoice, $currentCompany);
 
         // Remove old invoice taxes
         $invoice->taxes()->delete();
@@ -442,18 +390,12 @@ class InvoiceController extends Controller
         return redirect()->route('invoices.details', ['invoice' => $invoice->id, 'company_uid' => $currentCompany->uid]);
     }
 
-    /**
-     * Delete the Invoice
-     *
-     * @param \Illuminate\Http\Request $request
-     *
-     * @return \Illuminate\Routing\Redirector|\Illuminate\Http\RedirectResponse
-     */
+
     public function delete(Request $request)
     {
         $user = $request->user();
         $currentCompany = $user->currentCompany();
-        
+
         $invoice = Invoice::findOrFail($request->invoice);
 
         // return error if payment already exists with the invoice

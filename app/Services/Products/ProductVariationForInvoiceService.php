@@ -1,0 +1,72 @@
+<?php
+
+namespace App\Services\Products;
+
+use App\Models\Product;
+use App\Models\ProductVariation;
+use App\Services\StockMovement\StockMovementService;
+
+class ProductVariationForInvoiceService
+{
+
+
+    public function handleInvoiceProduct($products, $quantities, $prices, $discounts, $totals, $taxes, $invoice, $currentCompany,$user)
+    {
+        for ($i=0; $i < count($products); $i++) {
+
+
+//            $product = Product::firstOrCreate(
+//                ['id' => $products[$i], 'company_id' => $currentCompany->id],
+//                ['name' => $products[$i], 'price' => $prices[$i], 'hide' => 1]
+//            );
+
+            $product_variation = ProductVariation::firstOrCreate(
+                ['id' => $products[$i], 'company_id' => $currentCompany->id],
+                ["name" => $products[$i], 'price' => $prices[$i], 'hide' => 1]
+            );
+
+            $item = $invoice->items()->create([
+                'product_id' => $product_variation->product_id,
+                "product_variation_id" => $product_variation->id,
+                'company_id' => $currentCompany->id,
+                'quantity' => $quantities[$i],
+                'discount_type' => 'percent',
+                'discount_val' => $discounts[$i] ?? 0,
+                'price' => $prices[$i],
+                'total' => $totals[$i],
+            ]);
+
+            // Add taxes for Invoice Item if it is given
+            if ($taxes && array_key_exists($i, $taxes)) {
+                foreach ($taxes[$i] as $tax) {
+                    $item->taxes()->create([
+                        'tax_type_id' => $tax
+                    ]);
+                }
+            }
+
+            StockMovementService::handleStockMovementForInvoice($product_variation->id,$quantities[$i] ?? 0,
+                $user->id,$currentCompany->id,$invoice);
+
+        }
+
+    }
+
+//    private function getProduct($currentCompany, $i, $products, $prices)
+//    {
+//
+//        // old product not product_variation
+////        $product = Product::firstOrCreate(
+////            ['id' => $products[$i], 'company_id' => $currentCompany->id],
+////            ['name' => $products[$i], 'price' => $prices[$i], 'hide' => 1]
+////        );
+//
+//        $product_variation = ProductVariation::firstOrCreate(
+//            ['id' => $products, 'company_id' => $currentCompany->id],
+//            ['name' => $product, 'price' => 0, 'hide' => 1]
+//        );
+//
+//        return $product_variation;
+
+//    }
+}

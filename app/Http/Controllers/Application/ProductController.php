@@ -32,7 +32,7 @@ class ProductController extends Controller
         $user = $request->user();
         $currentCompany = $user->currentCompany();
         $products = $this->productService->getProductIndex($currentCompany);
-        
+
         return view('application.products.index', [
             'products' => $products
         ]);
@@ -79,6 +79,7 @@ class ProductController extends Controller
                     "product_id" => $product->id,
                     "price" => $data['variation_price'][$index] ?? 0,
                     "quantity" => $data['quantity'][$index] ?? 0,
+                    "base_quantity" => $data['quantity'][$index] ?? 0,
                     "sku" => $data['sku'][$index] ?? null,
                     "company_id" => $currentCompany->id,
                     "variations_json" => json_encode($variationGroup)
@@ -178,6 +179,7 @@ class ProductController extends Controller
             ->where('company_id', $currentCompany->id)
             ->firstOrFail();
 
+
         // Fetch necessary data for dropdowns (e.g., units, brands, warehouses)
         $units = ProductUnit::where('company_id', $currentCompany->id)->get();
         $brands = ProductBrands::where('company_id', $currentCompany->id)->get();
@@ -225,6 +227,7 @@ class ProductController extends Controller
             $product->productVariations()->delete();
         } else {
             $product->opening_stock = 0;
+            $product->price = 0;
             foreach ($data['variation_id'] as $index => $variationGroup) {
                 $variationsJson = json_encode($variationGroup);
 
@@ -249,7 +252,7 @@ class ProductController extends Controller
                 }
 
                 $product->opening_stock += $productVariation->quantity;
-                $product->price += $productVariation->price;
+                $product->price += (float)$productVariation->price;
                 $product->save();
 
                 // Update or create colors for the ProductVariation

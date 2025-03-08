@@ -47,14 +47,14 @@ class Product extends Model
 //        'purchase_price',
 //        'mrp',
 
-    'variation_group_id',
-    'colors',
+        'variation_group_id',
+        'colors',
 
     ];
 
     /**
      * Automatically cast attributes to given types
-     * 
+     *
      * @var array
      */
     protected $casts = [
@@ -74,7 +74,7 @@ class Product extends Model
 
     /**
      * Define Relation with Company Model
-     * 
+     *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function company()
@@ -114,7 +114,7 @@ class Product extends Model
 
     /**
      * Define Relation with ProductUnit Model
-     * 
+     *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function unit()
@@ -124,7 +124,7 @@ class Product extends Model
 
     /**
      * Define Relation with InvoiceItem Model
-     * 
+     *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function invoice_items()
@@ -134,7 +134,7 @@ class Product extends Model
 
     /**
      * Define Relation with EstimateItem Model
-     * 
+     *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function estimate_items()
@@ -150,6 +150,11 @@ class Product extends Model
     public function ProductVariations() : HasMany
     {
         return $this->hasMany(ProductVariation::class,'product_id');
+    }
+
+    public function hasColors()
+    {
+        return $this->productVariations()->whereHas('productVariationColors')->exists();
     }
 
     public function latestProductVariations() : HasMany

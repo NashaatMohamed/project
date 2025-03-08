@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Traits\HasTax;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InvoiceItem extends Model
 {
@@ -29,7 +30,7 @@ class InvoiceItem extends Model
 
     /**
      * Automatically cast attributes to given types
-     * 
+     *
      * @var array
      */
     protected $casts = [
@@ -41,7 +42,7 @@ class InvoiceItem extends Model
 
     /**
      * Define Relation with Invoice Model
-     * 
+     *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function invoice()
@@ -51,7 +52,7 @@ class InvoiceItem extends Model
 
     /**
      * Define Relation with Product Model
-     * 
+     *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function product()
@@ -59,9 +60,14 @@ class InvoiceItem extends Model
         return $this->belongsTo(Product::class);
     }
 
+    public function product_variation() : BelongsTo
+    {
+        return $this->belongsTo(ProductVariation::class,"product_variation_id");
+    }
+
     /**
      * Define Relation with Company Model
-     * 
+     *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function company()
@@ -71,7 +77,7 @@ class InvoiceItem extends Model
 
     /**
      * Get the Total Percentage of Invoice Item Taxes
-     * 
+     *
      * @return int
      */
     public function getTotalPercentageOfTaxes()
@@ -86,8 +92,8 @@ class InvoiceItem extends Model
 
     /**
      * Get the Total Percentage of Invoice Item Taxes with Tax Names
-     * 
-     * @return array 
+     *
+     * @return array
      */
     public function getTotalPercentageOfTaxesWithNames()
     {

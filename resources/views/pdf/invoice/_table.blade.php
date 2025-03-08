@@ -25,7 +25,8 @@
                 {{ $index }}
             </td>
             <td class="pl-0 text-left item-cell" style="vertical-align: top;">
-                <span>{{ $item->product->name }}</span><br>
+                {{--                <span>{{ $item->product->name }}</span><br>--}}
+                <span>{{ $item->product_variation->getFullProductName() }}</span><br>
                 <span class="item-description">{!! nl2br(htmlspecialchars($item->product->description)) !!}</span>
             </td>
             <td class="pr-20 text-right item-cell" style="vertical-align: top;">
@@ -176,4 +177,4 @@
             </tr>
         @endif
     </table>
-</div> 
+</div>

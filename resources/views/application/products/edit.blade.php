@@ -165,7 +165,7 @@
                                             <input name="variation_price[{{ $index }}]" type="text" id="variation_price_{{ $index }}"
                                                    class="form-control price_input"
                                                    placeholder="{{ __('messages.price') }}"
-                                                   autocomplete="off" value="{{ $variation->price }}">
+                                                   autocomplete="off" value="{{(float) $variation->price }}">
                                         </td>
                                         <td>
                                             <input name="quantity[{{ $index }}]" type="number" class="form-control variation-stock" id="quantity_{{ $index }}"
@@ -203,6 +203,7 @@
     </div>
 @endsection
 
+
 @section('page_body_scripts')
 
     <!-- stock synchronization -->
@@ -234,26 +235,26 @@
                 });
             }
 
-            $('body').on('input', '.variation-stock', function () {
-                const mainStockValue = parseFloat($('input[name="opening_stock"]').val()) || 0;
-                const variationStockSum = calculateVariationStockSum();
+            {{--$('body').on('input', '.variation-stock', function () {--}}
+            {{--    const mainStockValue = parseFloat($('input[name="opening_stock"]').val()) || 0;--}}
+            {{--    const variationStockSum = calculateVariationStockSum();--}}
 
-                if (variationStockSum > mainStockValue) {
-                    showSweetAlert('{{ __("messages.variation_stock_exceeds_main_stock") }}');
-                    $(this).val(mainStockValue - (variationStockSum - parseFloat($(this).val())));
-                }
-            });
+            {{--    if (variationStockSum > mainStockValue) {--}}
+            {{--        showSweetAlert('{{ __("messages.variation_stock_exceeds_main_stock") }}');--}}
+            {{--        $(this).val(mainStockValue - (variationStockSum - parseFloat($(this).val())));--}}
+            {{--    }--}}
+            {{--});--}}
 
 
             $('form').on('submit', function(e) {
                 const mainStockValue = parseFloat($('input[name="opening_stock"]').val()) || 0;
                 const variationStockSum = calculateVariationStockSum();
 
-                if (variationStockSum !== mainStockValue) {
-                    e.preventDefault();
-                    showSweetAlert('{{ __("messages.variation_stock_mismatch") }}');
-                    return;
-                }
+                {{--if (variationStockSum !== mainStockValue) {--}}
+                {{--    e.preventDefault();--}}
+                {{--    showSweetAlert('{{ __("messages.variation_stock_mismatch") }}');--}}
+                {{--    return;--}}
+                {{--}--}}
 
                 const selectedColors = $('#attributes_select_color_id').val();
 
@@ -288,22 +289,34 @@
         });
     </script>
 
-
+    <!-- تهيئة المتغيرات والمكتبات -->
     <script>
-        var attributesTree = [];
+        // تحويل بيانات الضرائب إلى JSON لاستخدامها في JavaScript
         var TaxAttributesTree = {!! json_encode(get_tax_types_select2_array($currentCompany->id)) !!};
 
+        // تعريف متغيرات جافاسكريبت
+        var attributesTree = [];
+
         $(document).ready(function () {
-            // Initialize Select2 for variation and tax dropdowns
+            // تهيئة Select2 للحقول
+            $('.variation_select').select2();
+            $('.vat').select2();
+        });
+    </script>
+
+    <!-- عند تغيير مجموعة التغييرات -->
+    <script>
+        $(document).ready(function () {
+            var attributesTree = [];
+            var TaxAttributesTree = {!! json_encode(get_tax_types_select2_array($currentCompany->id)) !!};
+
             initializeSelect2();
 
-            // Add the "All Variation Group" option if it doesn't exist
             var variationGroupDropdown = $("#variation_group_id");
             if (variationGroupDropdown.find('option[value="0"]').length === 0) {
                 variationGroupDropdown.prepend('<option value="0">{{ __("messages.all_variation_group") }}</option>');
             }
 
-            // Set the selected value based on the product's variation_group_id
             var variationGroupId = "{{ $product->variation_group_id }}";
             if (!variationGroupId) {
                 variationGroupDropdown.val(0).trigger('change');
@@ -315,10 +328,16 @@
                 var variation_group_id = $(this).val() || 0;
                 $("#variation_group_id_hidden").val(variation_group_id);
 
+                // Fetch attributes for the selected variation group
                 $.get("{{ route('ajax.get_variations_tree', ['company_uid' => $currentCompany->uid]) }}", {
                     variation_group_id: variation_group_id
                 }, function (response) {
-                    attributesTree = response;
+                    console.log("AJAX Response:", response); // Debugging
+
+                    var tree = response.variations_tree || [];
+
+                    attributesTree = flattenVariationTree(tree);
+                    console.log("Flattened Data:", attributesTree); // Debugging
 
                     initializeSelect2();
                 });
@@ -344,14 +363,59 @@
                 initializeSelect2(newRow);
             });
 
+            function flattenVariationTree(tree) {
+                var flattened = [];
+
+                // Ensure tree is an array
+                if (Array.isArray(tree)) {
+                    tree.forEach(function (item) {
+                        if (item.children && Array.isArray(item.children)) {
+                            flattened.push({
+                                text: item.text,
+                                children: item.children
+                            });
+                        } else {
+                            flattened.push(item);
+                        }
+                    });
+                } else {
+                    console.error("Invalid response format: tree is not an array", tree);
+                }
+
+                return flattened;
+            }
+
             function initializeSelect2(context) {
                 var $context = context ? $(context) : $('body');
 
-                $context.find('.variation_select').select2({
-                    placeholder: '{{ __('messages.select_variation') }}',
-                    multiple: true,
-                    data: attributesTree,
-                    width: 'resolve'
+                $context.find('.variation_select').each(function () {
+                    var $select = $(this);
+                    var selectedValues = $select.val() || [];
+                    console.log("Selected Values:", selectedValues); // Debugging
+
+                    if ($select.data('select2')) {
+                        $select.select2('destroy');
+                    }
+
+                    $select.select2({
+                        placeholder: '{{ __('messages.select_variation') }}',
+                        multiple: true,
+                        data: attributesTree.map(function (item) {
+                            if (item.children) {
+                                return {
+                                    text: item.text,
+                                    children: item.children
+                                };
+                            } else {
+                                // Single item
+                                return item;
+                            }
+                        }),
+                        width: 'resolve'
+                    });
+
+                    // Restore selected values
+                    $select.val(selectedValues).trigger('change');
                 });
 
                 $context.find('.vat').select2({
@@ -407,6 +471,37 @@
                 draw_product_variation_table();
             });
 
+        });
+    </script>
+
+    <script>
+        $(document).ready(function() {
+            // Initialize the color select dropdown with selected colors
+            $('#attributes_select_color_id').select2({
+                multiple: true,
+                width: 'resolve',
+                placeholder: "{{ __('messages.select_option') }}",
+                templateResult: function(option) {
+                    if (!option.id) {
+                        return option.text;
+                    }
+                    var color = option.id.toLowerCase();
+                    return $('<span><span class="color-square" style="background-color:' + color +
+                        '"></span>' + option.text + '</span>');
+                },
+                templateSelection: function(option) {
+                    if (!option.id) {
+                        return option.text;
+                    }
+                    var color = option.id.toLowerCase();
+                    return $('<span><span class="color-square-selected" style="background-color:' +
+                        color + '"></span>' + option.text + '</span>');
+                }
+            });
+
+            // Set selected colors in the dropdown
+            const selectedColors = {!! json_encode($product->ProductVariations->flatMap->productVariationColors->pluck('color')->unique()) !!};
+            $('#attributes_select_color_id').val(selectedColors).trigger('change');
         });
     </script>
 

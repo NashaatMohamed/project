@@ -6,16 +6,16 @@
                 <select id="customer" name="customer_id" data-toggle="select" class="form-control select2-hidden-accessible select-with-footer" data-select2-id="customer">
                     <option disabled selected>{{ __('messages.select_customer') }}</option>
                     @if($invoice->customer_id)
-                        <option value="{{ $invoice->customer_id }}" 
-                            selected=""
-                            data-currency="{{ $invoice->customer->currency }}" 
-                            data-billing_address="{{$invoice->customer->displayLongAddress('billing')}}"
-                            data-shipping_address="{{$invoice->customer->displayLongAddress('shipping')}}"
-                            >
+                        <option value="{{ $invoice->customer_id }}"
+                                selected=""
+                                data-currency="{{ $invoice->customer->currency }}"
+                                data-billing_address="{{$invoice->customer->displayLongAddress('billing')}}"
+                                data-shipping_address="{{$invoice->customer->displayLongAddress('shipping')}}"
+                        >
                             {{ $invoice->customer->display_name }}
                         </option>
                     @endif
-                </select> 
+                </select>
                 <div class="d-none select-footer">
                     <a href="{{ route('customers.create', ['company_uid' => $currentCompany->uid]) }}" target="_blank" class="font-weight-300">+ {{ __('messages.add_new_customer') }}</a>
                 </div>
@@ -37,7 +37,7 @@
                 <label for="invoice_date">{{ __('messages.invoice_date') }}</label>
                 <input name="invoice_date" type="text" class="form-control input" data-toggle="flatpickr" data-flatpickr-default-date="{{ $invoice->invoice_date ?? now() }}" readonly="readonly" required>
             </div>
-            <div class="form-group required"> 
+            <div class="form-group required">
                 <label for="invoice_number">{{ __('messages.invoice_number') }}</label>
                 <div class="input-group input-group-merge">
                     <input name="invoice_prefix" type="hidden" value="{{ $invoice->invoice_prefix }}">
@@ -49,14 +49,14 @@
                     </div>
                 </div>
             </div>
-            <div class="form-group"> 
+            <div class="form-group">
                 <label for="is_recurring">{{ __('messages.is_recurring') }}</label>
                 <select id="is_recurring" name="is_recurring" class="form-control" required>
                     <option value="0" {{ $invoice->is_recurring == 0 ? 'selected=""' : '' }}>{{ __('messages.no') }}</option>
                     @for ($i = 1; $i < get_system_setting('recurring_invoice_cycle'); $i++)
                         <option value="{{ $i }}" {{ $invoice->is_recurring == $i ? 'selected=""' : '' }}>{{ __('messages.every_x_month', ['month' => $i]) }}</option>
                     @endfor
-                </select> 
+                </select>
             </div>
         </div>
 
@@ -76,7 +76,7 @@
                     </div>
                 </div>
             </div>
-            <div id="recurring-cyle" class="form-group" style="{{ !$invoice->is_recurring ? 'display: none' : '' }}"> 
+            <div id="recurring-cyle" class="form-group" style="{{ !$invoice->is_recurring ? 'display: none' : '' }}">
                 <label for="cycle">{{ __('messages.cycle') }}</label>
                 <select name="cycle" class="form-control" required>
                     <option value="-1" {{ $invoice->cycle == -1 ? 'selected=""' : '' }}>{{ __('messages.infinite') }}</option>
@@ -86,147 +86,148 @@
                 </select>
             </div>
         </div>
- 
+
         <div class="col-12 mt-5">
             <div class="table-responsive" data-toggle="lists">
                 <table class="table table-xl mb-0 thead-border-top-0 table-striped">
                     <thead>
-                        <tr> 
-                            @if($tax_per_item and $discount_per_item)
-                                <th class="w-30">{{ __('messages.product') }}</th>
-                                <th class="w-20">{{ __('messages.taxes') }}</th>
-                                <th class="w-10">{{ __('messages.quantity') }}</th>
-                                <th class="w-15">{{ __('messages.price') }}</th>
-                                <th class="w-15">{{ __('messages.discount') }}</th>
-                                <th class="text-right w-10">{{ __('messages.amount') }}</th>
-                            @elseif($tax_per_item and !$discount_per_item)
-                                <th class="w-40">{{ __('messages.product') }}</th>
-                                <th class="w-25">{{ __('messages.taxes') }}</th>
-                                <th class="w-10">{{ __('messages.quantity') }}</th>
-                                <th class="w-15">{{ __('messages.price') }}</th>
-                                <th class="text-right w-10">{{ __('messages.amount') }}</th>
-                            @elseif(!$tax_per_item and $discount_per_item)
-                                <th class="w-40">{{ __('messages.product') }}</th>
-                                <th class="w-10">{{ __('messages.quantity') }}</th>
-                                <th class="w-20">{{ __('messages.price') }}</th>
-                                <th class="w-20">{{ __('messages.discount') }}</th>
-                                <th class="text-right w-10">{{ __('messages.amount') }}</th>
-                            @elseif(!$tax_per_item and !$discount_per_item)
-                                <th class="w-60">{{ __('messages.product') }}</th>
-                                <th class="w-10">{{ __('messages.quantity') }}</th>
-                                <th class="w-20">{{ __('messages.price') }}</th>
-                                <th class="text-right w-10">{{ __('messages.amount') }}</th>
-                            @endif
-                            <th></th>
-                        </tr>
+                    <tr>
+                        @if($tax_per_item and $discount_per_item)
+                            <th class="w-30">{{ __('messages.product') }}</th>
+                            <th class="w-20">{{ __('messages.taxes') }}</th>
+                            <th class="w-10">{{ __('messages.quantity') }}</th>
+                            <th class="w-15">{{ __('messages.price') }}</th>
+                            <th class="w-15">{{ __('messages.discount') }}</th>
+                            <th class="text-right w-10">{{ __('messages.amount') }}</th>
+                        @elseif($tax_per_item and !$discount_per_item)
+                            <th class="w-40">{{ __('messages.product') }}</th>
+                            <th class="w-25">{{ __('messages.taxes') }}</th>
+                            <th class="w-10">{{ __('messages.quantity') }}</th>
+                            <th class="w-15">{{ __('messages.price') }}</th>
+                            <th class="text-right w-10">{{ __('messages.amount') }}</th>
+                        @elseif(!$tax_per_item and $discount_per_item)
+                            <th class="w-40">{{ __('messages.product') }}</th>
+                            <th class="w-10">{{ __('messages.quantity') }}</th>
+                            <th class="w-20">{{ __('messages.price') }}</th>
+                            <th class="w-20">{{ __('messages.discount') }}</th>
+                            <th class="text-right w-10">{{ __('messages.amount') }}</th>
+                        @elseif(!$tax_per_item and !$discount_per_item)
+                            <th class="w-60">{{ __('messages.product') }}</th>
+                            <th class="w-10">{{ __('messages.quantity') }}</th>
+                            <th class="w-20">{{ __('messages.price') }}</th>
+                            <th class="text-right w-10">{{ __('messages.amount') }}</th>
+                        @endif
+                        <th></th>
+                    </tr>
                     </thead>
                     <tbody class="list" id="items">
-                        <tr id="product_row_template" class="d-none">
+                    <tr id="product_row_template" class="d-none">
+                        <td class="select-container">
+                            <select name="product[]" class="form-control priceListener select-with-footer" required>
+                                <option disabled selected>{{ __('messages.select_product') }}</option>
+                            </select>
+                            <div class="d-none select-footer">
+                                <a href="{{ route('products.create', ['company_uid' => $currentCompany->uid]) }}" target="_blank" class="font-weight-300">+ {{ __('messages.add_new_product') }}</a>
+                            </div>
+                        </td>
+                        @if($tax_per_item)
                             <td class="select-container">
-                                <select name="product[]" class="form-control priceListener select-with-footer" required>
-                                    <option disabled selected>{{ __('messages.select_product') }}</option>
+                                <select name="taxes[]" multiple class="form-control priceListener select-with-footer">
+                                    @foreach(get_tax_types_select2_array($currentCompany->id) as $option)
+                                        <option value="{{ $option['id'] }}" data-percent="{{ $option['percent'] }}">{{ $option['text'] }}</option>
+                                    @endforeach
                                 </select>
                                 <div class="d-none select-footer">
-                                    <a href="{{ route('products.create', ['company_uid' => $currentCompany->uid]) }}" target="_blank" class="font-weight-300">+ {{ __('messages.add_new_product') }}</a>
+                                    <a href="{{ route('settings.tax_types.create', ['company_uid' => $currentCompany->uid]) }}" target="_blank" class="font-weight-300">+ {{ __('messages.add_new_tax') }}</a>
                                 </div>
                             </td>
-                            @if($tax_per_item)
-                                <td class="select-container">
-                                    <select name="taxes[]" multiple class="form-control priceListener select-with-footer">
-                                        @foreach(get_tax_types_select2_array($currentCompany->id) as $option)
-                                            <option value="{{ $option['id'] }}" data-percent="{{ $option['percent'] }}">{{ $option['text'] }}</option>
-                                        @endforeach
-                                    </select> 
-                                    <div class="d-none select-footer">
-                                        <a href="{{ route('settings.tax_types.create', ['company_uid' => $currentCompany->uid]) }}" target="_blank" class="font-weight-300">+ {{ __('messages.add_new_tax') }}</a>
-                                    </div>
-                                </td>
-                            @endif
+                        @endif
+                        <td>
+                            <input name="quantity[]" type="number" class="form-control priceListener" value="1" required>
+                        </td>
+                        <td>
+                            <input name="price[]" type="text" class="form-control price_input priceListener" autocomplete="off" value="0" required>
+                        </td>
+                        @if($discount_per_item)
                             <td>
-                                <input name="quantity[]" type="number" class="form-control priceListener" value="1" required>
-                            </td>
-                            <td>
-                                <input name="price[]" type="text" class="form-control price_input priceListener" autocomplete="off" value="0" required>
-                            </td>
-                            @if($discount_per_item)
-                                <td>
-                                    <div class="input-group input-group-merge">
-                                        <input name="discount[]" type="number" class="form-control form-control-prepended priceListener" value="0">
-                                        <div class="input-group-prepend">
-                                            <div class="input-group-text">
-                                                %
-                                            </div>
+                                <div class="input-group input-group-merge">
+                                    <input name="discount[]" type="number" class="form-control form-control-prepended priceListener" value="0">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">
+                                            %
                                         </div>
                                     </div>
+                                </div>
+                            </td>
+                        @endif
+                        <td class="text-right">
+                            <p class="mb-1">
+                                <input type="text" name="total[]" class="price_input price-text amount_price" value="0" readonly>
+                            </p>
+                            <div class="tax_list"></div>
+                        </td>
+                        <td>
+                            <a onclick="removeRow(this)">
+                                <i class="material-icons icon-16pt">clear</i>
+                            </a>
+                        </td>
+                    </tr>
+                    @if($invoice->items->count() > 0)
+                        @foreach($invoice->items as $item)
+                            <tr>
+                                <td class="select-container">
+                                    <select name="product[]" class="form-control priceListener select-with-footer" required>
+                                        {{--                                            <option value="{{ $item->product_id }}" selected="">{{ $item->product->name }}</option>--}}
+                                        <option value="{{ $item->product_variation_id }}" selected="">{{ $item->product_variation->getFullProductName() }}</option>
+                                    </select>
+                                    <div class="d-none select-footer">
+                                        <a href="{{ route('products.create', ['company_uid' => $currentCompany->uid]) }}" target="_blank" class="font-weight-300">+ {{ __('messages.add_new_product') }}</a>
+                                    </div>
                                 </td>
-                            @endif
-                            <td class="text-right">
-                                <p class="mb-1">
-                                    <input type="text" name="total[]" class="price_input price-text amount_price" value="0" readonly>
-                                </p>
-                                <div class="tax_list"></div>
-                            </td>
-                            <td>
-                                <a onclick="removeRow(this)">
-                                    <i class="material-icons icon-16pt">clear</i>
-                                </a>
-                            </td>
-                        </tr>
-                        @if($invoice->items->count() > 0)
-                            @foreach($invoice->items as $item)
-                                <tr>
+                                @if($tax_per_item)
                                     <td class="select-container">
-                                        <select name="product[]" class="form-control priceListener select-with-footer" required>
-                                            <option value="{{ $item->product_id }}" selected="">{{ $item->product->name }}</option>
+                                        <select name="taxes[]" multiple class="form-control priceListener select-with-footer">
+                                            @foreach(get_tax_types_select2_array($currentCompany->id) as $option)
+                                                <option value="{{ $option['id'] }}" data-percent="{{ $option['percent'] }}" {{ $item->hasTax($option['id']) ? 'selected=""' : '' }}>{{ $option['text'] }}</option>
+                                            @endforeach
                                         </select>
                                         <div class="d-none select-footer">
-                                            <a href="{{ route('products.create', ['company_uid' => $currentCompany->uid]) }}" target="_blank" class="font-weight-300">+ {{ __('messages.add_new_product') }}</a>
+                                            <a href="{{ route('settings.tax_types.create', ['company_uid' => $currentCompany->uid]) }}" target="_blank" class="font-weight-300">+ {{ __('messages.add_new_tax') }}</a>
                                         </div>
                                     </td>
-                                    @if($tax_per_item)
-                                        <td class="select-container">
-                                            <select name="taxes[]" multiple class="form-control priceListener select-with-footer">
-                                                @foreach(get_tax_types_select2_array($currentCompany->id) as $option)
-                                                    <option value="{{ $option['id'] }}" data-percent="{{ $option['percent'] }}" {{ $item->hasTax($option['id']) ? 'selected=""' : '' }}>{{ $option['text'] }}</option>
-                                                @endforeach
-                                            </select>
-                                            <div class="d-none select-footer">
-                                                <a href="{{ route('settings.tax_types.create', ['company_uid' => $currentCompany->uid]) }}" target="_blank" class="font-weight-300">+ {{ __('messages.add_new_tax') }}</a>
-                                            </div>
-                                        </td>
-                                    @endif
+                                @endif
+                                <td>
+                                    <input name="quantity[]" type="number" class="form-control priceListener" value="{{ $item->quantity }}" required>
+                                </td>
+                                <td>
+                                    <input name="price[]" type="text" class="form-control price_input priceListener" autocomplete="off" value="{{ $item->price }}" required>
+                                </td>
+                                @if($discount_per_item)
                                     <td>
-                                        <input name="quantity[]" type="number" class="form-control priceListener" value="{{ $item->quantity }}" required>
-                                    </td>
-                                    <td>
-                                        <input name="price[]" type="text" class="form-control price_input priceListener" autocomplete="off" value="{{ $item->price }}" required>
-                                    </td>
-                                    @if($discount_per_item)
-                                        <td>
-                                            <div class="input-group input-group-merge">
-                                                <input name="discount[]" type="number" class="form-control form-control-prepended priceListener" value="{{ $item->discount_val }}">
-                                                <div class="input-group-prepend">
-                                                    <div class="input-group-text">
-                                                        %
-                                                    </div>
+                                        <div class="input-group input-group-merge">
+                                            <input name="discount[]" type="number" class="form-control form-control-prepended priceListener" value="{{ $item->discount_val }}">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">
+                                                    %
                                                 </div>
                                             </div>
-                                        </td>
-                                    @endif
-                                    <td class="text-right">
-                                        <p class="mb-1">
-                                            <input type="text" name="total[]" class="price_input price-text amount_price" value="{{ $item->total }}" readonly>
-                                        </p>
-                                        <div class="tax_list"></div>
+                                        </div>
                                     </td>
-                                    <td>
-                                        <a onclick="removeRow(this)">
-                                            <i class="material-icons icon-16pt">clear</i>
-                                        </a>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        @endif
+                                @endif
+                                <td class="text-right">
+                                    <p class="mb-1">
+                                        <input type="text" name="total[]" class="price_input price-text amount_price" value="{{ $item->total }}" readonly>
+                                    </p>
+                                    <div class="tax_list"></div>
+                                </td>
+                                <td>
+                                    <a onclick="removeRow(this)">
+                                        <i class="material-icons icon-16pt">clear</i>
+                                    </a>
+                                </td>
+                            </tr>
+                        @endforeach
+                    @endif
                     </tbody>
                 </table>
             </div>
@@ -254,7 +255,7 @@
                     @foreach(\App\Models\InvoiceTemplate::all() as $template)
                         <option value="{{ $template->id }}" {{ $invoice->template_view == $template->view ? 'selected' : '' }}>{{ $template->name }}</option>
                     @endforeach
-                </select> 
+                </select>
             </div>
         </div>
 
@@ -281,7 +282,7 @@
                                     @foreach(get_tax_types_select2_array($currentCompany->id) as $option)
                                         <option value="{{ $option['id'] }}" data-percent="{{ $option['percent'] }}" {{ $invoice->hasTax($option['id']) ? 'selected=""' : '' }}>{{ $option['text'] }}</option>
                                     @endforeach
-                                </select> 
+                                </select>
                                 <div class="d-none select-footer">
                                     <a href="{{ route('settings.tax_types.create', ['company_uid' => $currentCompany->uid]) }}" target="_blank" class="font-weight-300">+ {{ __('messages.add_new_tax') }}</a>
                                 </div>
@@ -331,7 +332,7 @@
                 @endforeach
             </div>
         @endif
- 
+
         <div class="col-12 text-center float-right mt-3">
             <button type="button" class="btn btn-primary save_form_button">{{ __('messages.save_invoice') }}</button>
         </div>
