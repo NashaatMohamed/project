@@ -22,7 +22,6 @@ class ProductVariation extends Model
         'discount',
         'image',
         'quantity',
-        "base_quantity",
         'sku',
         'variation_id',
         'vat',
