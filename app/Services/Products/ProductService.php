@@ -138,6 +138,7 @@ class ProductService
             "product_id" => $product->id,
             "price" => $data['variation_price'][$index] ?? 0,
             "quantity" => $data['quantity'][$index] ?? 0,
+            "base_quantity" => $data['quantity'][$index] ?? 0,
             "sku" => $data['sku'][$index] ?? null,
             "company_id" => $currentCompany->id,
             "variations_json" => $variationsJson
