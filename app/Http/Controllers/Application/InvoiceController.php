@@ -369,7 +369,7 @@ class InvoiceController extends Controller
         // Add products (invoice items)
 
         (new ProductVariationForInvoiceService())->handleInvoiceProduct(
-            $products, $quantities, $prices, $discounts, $totals, $taxes, $invoice, $currentCompany);
+            $products, $quantities, $prices, $discounts, $totals, $taxes, $invoice, $currentCompany, $user,true);
 
         // Remove old invoice taxes
         $invoice->taxes()->delete();
