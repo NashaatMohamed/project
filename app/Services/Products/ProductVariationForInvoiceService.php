@@ -20,6 +20,10 @@ class ProductVariationForInvoiceService
 //                ['name' => $products[$i], 'price' => $prices[$i], 'hide' => 1]
 //            );
 
+
+
+            
+
             $product_variation = ProductVariation::firstOrCreate(
                 ['id' => $products[$i], 'company_id' => $currentCompany->id],
                 ["name" => $products[$i], 'price' => $prices[$i], 'hide' => 1]
