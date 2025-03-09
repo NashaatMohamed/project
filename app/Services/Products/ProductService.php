@@ -78,6 +78,7 @@ class ProductService
             "opening_stock" => $data["opening_stock"] ?? null,
             "quantity_alarm" => $data["quantity_alarm"] ?? null,
             "brand_id" => $data["brand_id"] ?? null,
+            "category_id" => $data["category_id"] ?? null,
             "description" => $data["description"] ?? null,
             "code" => $data['code'] ?? null,
             "barcode" => $data['barcode'] ?? null,
