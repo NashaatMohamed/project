@@ -25,11 +25,6 @@ class ProductVariationForInvoiceService
                 ["name" => $products[$i], 'price' => $prices[$i], 'hide' => 1]
             );
 
-            $product_variation->quantity = $product_variation->quantity - $quantities[$i];
-            $product_variation->product->opening_stock = $product_variation->product->opening_stock - $quantities[$i];
-            $product_variation->product->save();
-            $product_variation->save();
-
             $item = $invoice->items()->create([
                 'product_id' => $product_variation->product_id,
                 "product_variation_id" => $product_variation->id,
