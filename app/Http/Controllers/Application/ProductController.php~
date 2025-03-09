@@ -266,10 +266,6 @@ class ProductController extends Controller
                     $this->updateColors($productVariation->id, $data, $index);
                 }
             }
-
-            $product->productVariations()
-                ->whereNotIn('id', $updatedVariationIds)
-                ->delete();
         }
 
         return redirect()->route('products', ['company_uid' => $currentCompany->uid])
