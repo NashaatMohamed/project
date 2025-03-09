@@ -14,6 +14,7 @@ use App\Models\Warehouses;
 use App\Services\Products\ProductService;
 use App\Services\StockMovement\StockMovementService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -201,18 +202,53 @@ class ProductController extends Controller
         $currentCompany = $user->currentCompany();
         $data = $request->validated() + ['company_id' => $currentCompany->id];
 
-        $data['colors_quantity'] = array_key_exists("colors_quantity",$data) ? array_map(fn($q) => array_values(array_filter($q)), $data['colors_quantity']) : [];
+        $data['colors_quantity'] = $this->normalizeColorsQuantity($data);
 
+        $product = $this->fetchProduct($id, $currentCompany->id);
 
-        // Fetch the product
-        $product = Product::where('id', $id)
-            ->where('company_id', $currentCompany->id)
+        DB::beginTransaction();
+
+        try {
+            $this->updateProduct($product, $data);
+
+            if (empty($data['variation_id'])) {
+                $product->productVariations()->delete();
+            } else {
+                $this->updateProductVariations($product, $data, $user, $currentCompany);
+            }
+
+            DB::commit();
+
+            return redirect()->route('products', ['company_uid' => $currentCompany->uid])
+                ->with('success', __('global.record_updated'));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', __('global.update_failed') . $e->getMessage());
+        }
+    }
+
+    private function normalizeColorsQuantity($data)
+    {
+        return array_key_exists("colors_quantity", $data)
+            ? array_map(fn($q) => array_values(array_filter($q)), $data['colors_quantity'])
+            : [];
+    }
+
+    /**
+     * Fetch the product
+     */
+    private function fetchProduct($id, $companyId)
+    {
+        return Product::where('id', $id)
+            ->where('company_id', $companyId)
             ->firstOrFail();
+    }
 
-        $updatedVariationIds = [];
-
-
-        // Update the product
+    /**
+     * Update the product
+     */
+    private function updateProduct($product, $data)
+    {
         $product->update([
             "name" => $data["name"] ?? null,
             "price" => $data['price'] ?? null,
@@ -225,55 +261,89 @@ class ProductController extends Controller
             "code" => $data['code'] ?? null,
             "barcode" => $data['barcode'] ?? null,
         ]);
+    }
 
-        if (empty($data['variation_id'])) {
-            $product->productVariations()->delete();
-        } else {
-            $product->opening_stock = 0;
-            $product->price = 0;
-            foreach ($data['variation_id'] as $index => $variationGroup) {
-                $variationsJson = json_encode($variationGroup);
+    /**
+     * Update product variations
+     */
+    private function updateProductVariations($product, $data, $user, $currentCompany)
+    {
+        $updatedVariationIds = [];
 
-                $productVariation = $product->productVariations()->where('variations_json', $variationsJson)->first();
+        $product->opening_stock = 0;
+        $product->price = 0;
 
-                if ($productVariation) {
-                    StockMovementService::handleStockMovementForManualEdit($productVariation,$data['quantity'][$index] ?? 0,
-                        $user->id,$currentCompany->id);
-                    $productVariation->update([
-                        "price" => $data['variation_price'][$index] ?? 0,
-                        "quantity" => $data['quantity'][$index] ?? 0,
-                        "sku" => $data['sku'][$index] ?? null,
-                    ]);
-                }else{
-                    $productVariation = ProductVariation::create([
-                        "product_id" => $product->id,
-                        "price" => $data['variation_price'][$index] ?? 0,
-                        "quantity" => $data['quantity'][$index] ?? 0,
-                        "sku" => $data['sku'][$index] ?? null,
-                        "company_id" => $currentCompany->id,
-                        "variations_json" => $variationsJson
-                    ]);
-                }
-                $updatedVariationIds[] = $productVariation->id;
+        foreach ($data['variation_id'] as $index => $variationGroup) {
+            $variationsJson = json_encode($variationGroup);
 
+            $productVariation = $product->productVariations()->where('variations_json', $variationsJson)->first();
 
-                $product->opening_stock += $productVariation->quantity;
-                $product->price += (float)$productVariation->price;
-                $product->save();
-
-                // Update or create colors for the ProductVariation
-                if ($productVariation && !empty($data['colors'])) {
-                    $this->updateColors($productVariation->id, $data, $index);
-                }
+            if ($productVariation) {
+                $this->updateExistingProductVariation($productVariation, $data, $index, $user, $currentCompany);
+            } else {
+                $productVariation = $this->createNewProductVariation($product, $data, $index, $currentCompany, $variationsJson);
             }
 
-            $product->productVariations()
-                ->whereNotIn('id', $updatedVariationIds)
-                ->delete();
+            $updatedVariationIds[] = $productVariation->id;
+
+            $product->opening_stock += $productVariation->quantity;
+            $product->price += (float)$productVariation->price;
+            $product->save();
+
+            $this->handleProductVariationColors($productVariation, $data, $index);
         }
 
-        return redirect()->route('products', ['company_uid' => $currentCompany->uid])
-            ->with('success', __('global.record_updated'));
+        $product->productVariations()
+            ->whereNotIn('id', $updatedVariationIds)
+            ->delete();
+    }
+
+    /**
+     * Update an existing product variation
+     */
+    private function updateExistingProductVariation($productVariation, $data, $index, $user, $currentCompany)
+    {
+        StockMovementService::handleStockMovementForManualEdit(
+            $productVariation,
+            $data['quantity'][$index] ?? 0,
+            $user->id,
+            $currentCompany->id
+        );
+
+        $productVariation->update([
+            "price" => $data['variation_price'][$index] ?? 0,
+            "quantity" => $data['quantity'][$index] ?? 0,
+            "sku" => $data['sku'][$index] ?? null,
+        ]);
+    }
+
+    /**
+     * Create a new product variation
+     */
+    private function createNewProductVariation($product, $data, $index, $currentCompany, $variationsJson)
+    {
+        return ProductVariation::create([
+            "product_id" => $product->id,
+            "price" => $data['variation_price'][$index] ?? 0,
+            "quantity" => $data['quantity'][$index] ?? 0,
+            "sku" => $data['sku'][$index] ?? null,
+            "company_id" => $currentCompany->id,
+            "variations_json" => $variationsJson
+        ]);
+    }
+
+    /**
+     * Handle product variation colors
+     */
+    private function handleProductVariationColors($productVariation, $data, $index)
+    {
+        if (empty($data['colors']) || empty($data['colors_quantity'])) {
+            ProductVariationColor::where('product_variation_id', $productVariation->id)->delete();
+        }
+
+        if (!empty($data['colors'])) {
+            $this->updateColors($productVariation->id, $data, $index);
+        }
     }
 
     /**
@@ -281,14 +351,8 @@ class ProductController extends Controller
      */
     private function updateColors($productVariationId, $data, $index)
     {
-        if (empty($data['colors']) || empty($data['colors_quantity'])) {
-            return;
-        }
-
-        // حذف جميع الألوان القديمة المرتبطة بـ ProductVariation
         ProductVariationColor::where('product_variation_id', $productVariationId)->delete();
 
-        // إنشاء الألوان الجديدة
         foreach ($data['colors'] as $colorName) {
             ProductVariationColor::create([
                 "product_variation_id" => $productVariationId,
